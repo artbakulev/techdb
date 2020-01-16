@@ -1,0 +1,1 @@
+psql -h localhost -d techdb -U techdb_user -f init.sql
