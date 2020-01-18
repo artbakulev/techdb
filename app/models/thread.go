@@ -13,12 +13,6 @@ type Thread struct {
 	Votes   int32     `json:"votes,omitempty"`
 }
 
-type ThreadNew struct {
-	Slug    string `json:"slug,omitempty"`
-	Title   string `json:"title"`
-	Message string `json:"message"`
-}
-
 type ThreadUpdate struct {
 	ID      int32  `json:"id,omitempty"`
 	Slug    string `json:"slug,omitempty"`
