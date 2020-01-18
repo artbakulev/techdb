@@ -85,3 +85,6 @@ CREATE TABLE users_forum
 
 CREATE INDEX idx_users_forum_nickname ON users_forum (nickname);
 CREATE INDEX idx_users_forum_slug ON users_forum (slug);
+
+
+-- TODO: triggers for forum stats

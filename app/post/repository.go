@@ -3,8 +3,8 @@ package post
 import "github.com/artbakulev/techdb/app/models"
 
 type Repository interface {
-	Create(post models.Post) (models.Post, *models.Error)
-	Update(id int64) (models.Post, *models.Error)
-	GetFull(id int64, query models.PostsRelatedQuery) (models.PostFull, *models.Error)
-	GetMany(query models.PostsRequestQuery) (models.Posts, *models.Error)
+	CreateMany(posts models.Posts, thread models.Thread) (models.Posts, *models.Error)
+	Update(post models.Post, postUpdate models.PostUpdate) (models.Post, *models.Error)
+	GetMany(thread models.Thread, query models.PostsRequestQuery) (models.Posts, *models.Error)
+	GetByID(id int64) (models.Post, *models.Error)
 }

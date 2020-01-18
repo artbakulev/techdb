@@ -1,5 +1,11 @@
 package models
 
+const (
+	FLAT        = "flat"
+	TREE        = "tree"
+	PARENT_TREE = "parent_tree"
+)
+
 type PostsRequestQuery struct {
 	ThreadID   int64  `json:"id,omitempty"`
 	ThreadSlug string `json:"slug,omitempty"`

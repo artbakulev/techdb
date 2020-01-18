@@ -10,11 +10,11 @@ var config = pgx.ConnConfig{
 	Password: "techdb_password",
 }
 
-var DBConn *pgx.ConnPool
+var Connection *pgx.ConnPool
 
 func InitDatabaseConnection() error {
 	var err error
-	DBConn, err = pgx.NewConnPool(
+	Connection, err = pgx.NewConnPool(
 		pgx.ConnPoolConfig{
 			ConnConfig:     config,
 			MaxConnections: 50,

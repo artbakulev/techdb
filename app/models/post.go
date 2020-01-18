@@ -27,4 +27,8 @@ type PostNew struct {
 	Parent  int64  `json:"parent,omitempty"`
 }
 
+type PostUpdate struct {
+	Message string `json:"message"`
+}
+
 type Posts []Post
