@@ -12,11 +12,11 @@ const (
 )
 
 type Error struct {
-	StatusCode int8   `json:"status_code"`
+	StatusCode int16  `json:"status_code"`
 	Message    string `json:"message"`
 }
 
-func NewError(statusCode int8, message string, extraMessages ...string) *Error {
+func NewError(statusCode int16, message string, extraMessages ...string) *Error {
 	if len(extraMessages) > 0 {
 		for _, item := range extraMessages {
 			message += ": " + item
