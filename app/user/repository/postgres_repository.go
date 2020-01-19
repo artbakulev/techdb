@@ -16,7 +16,7 @@ func NewPostgresUserRepository(db *pgx.ConnPool) user.Repository {
 
 func (p postgresUserRepository) GetByNickname(nickname string) (models.User, *models.Error) {
 	u := models.User{}
-	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM forum_users WHERE nickname = $1`, nickname)
+	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM users WHERE nickname = $1`, nickname)
 	if err != nil {
 		return models.User{}, models.NewError(500, "cannot get user by nickname", err.Error())
 	}
@@ -27,13 +27,14 @@ func (p postgresUserRepository) GetByNickname(nickname string) (models.User, *mo
 		if err != nil {
 			return models.User{}, models.NewError(404, models.DBParsingError, err.Error())
 		}
+		return u, nil
 	}
-	return u, nil
+	return models.User{}, models.NewError(404, models.NotFoundError)
 }
 
 func (p postgresUserRepository) GetByEmail(email string) (models.User, *models.Error) {
 	u := models.User{}
-	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM forum_users WHERE email = $1`, email)
+	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM users WHERE email = $1`, email)
 	if err != nil {
 		return models.User{}, models.NewError(500, models.NotFoundError, err.Error())
 	}
@@ -44,8 +45,9 @@ func (p postgresUserRepository) GetByEmail(email string) (models.User, *models.E
 		if err != nil {
 			return models.User{}, models.NewError(500, models.DBParsingError, err.Error())
 		}
+		return u, nil
 	}
-	return u, nil
+	return models.User{}, models.NewError(404, models.NotFoundError)
 }
 
 func (p postgresUserRepository) Create(userNew models.User) (models.User, *models.Error) {

@@ -13,14 +13,6 @@ func NewUserUsecase(userRepo user.Repository) user.Usecase {
 	return &userUsecase{userRepo: userRepo}
 }
 
-func (u userUsecase) GetUserByNickname(nickname string) (models.User, *models.Error) {
-	return u.userRepo.GetByNickname(nickname)
-}
-
-func (u userUsecase) GetUserByEmail(email string) (models.User, *models.Error) {
-	return u.userRepo.GetByEmail(email)
-}
-
 func (u userUsecase) GetUserByEmailOrByNickname(data string, isEmail bool) (models.User, *models.Error) {
 	if isEmail {
 		return u.userRepo.GetByEmail(data)

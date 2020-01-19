@@ -1,5 +1,7 @@
 package models
 
+import "log"
+
 const (
 	CreateError     = "ошибка создания объекта"
 	UpdateError     = "ошибка обновления объекта"
@@ -12,11 +14,11 @@ const (
 )
 
 type Error struct {
-	StatusCode int16  `json:"status_code"`
+	StatusCode int    `json:"status_code"`
 	Message    string `json:"message"`
 }
 
-func NewError(statusCode int16, message string, extraMessages ...string) *Error {
+func NewError(statusCode int, message string, extraMessages ...string) *Error {
 	if len(extraMessages) > 0 {
 		for _, item := range extraMessages {
 			message += ": " + item
@@ -26,4 +28,12 @@ func NewError(statusCode int16, message string, extraMessages ...string) *Error 
 		StatusCode: statusCode,
 		Message:    message,
 	}
+}
+
+func (e Error) MessageToBytes() []byte {
+	return append([]byte("{\"message\": \""), []byte(e.Message+"\"}")...)
+}
+
+func (e Error) Log() {
+	log.Print("Error: ", e.StatusCode, e.Message)
 }
