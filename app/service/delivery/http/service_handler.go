@@ -25,6 +25,7 @@ func (s ServiceHandler) Clear(ctx *fasthttp.RequestCtx) {
 		err.SetToContext(ctx)
 	}
 }
+
 func (s ServiceHandler) GetStatus(ctx *fasthttp.RequestCtx) {
 	dbStatus, e := s.usecase.GetDBStatus()
 	if e != nil {
