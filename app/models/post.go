@@ -10,7 +10,7 @@ type Post struct {
 	IsEdited bool      `json:"isEdited,omitempty"`
 	Message  string    `json:"message"`
 	Parent   int64     `json:"parent,omitempty"`
-	Thread   int32     `json:"thread,omitempty"`
+	Thread   int64     `json:"thread,omitempty"`
 	Path     []int64   `json:"-"`
 }
 

@@ -4,7 +4,6 @@ import (
 	"github.com/artbakulev/techdb/app/models"
 	"github.com/artbakulev/techdb/app/user"
 	"github.com/jackc/pgx"
-	"log"
 )
 
 type postgresUserRepository struct {
@@ -92,7 +91,6 @@ func (p postgresUserRepository) Update(userUpdate models.User) (models.User, *mo
 	}
 
 	baseSQL += " WHERE nickname = '" + userUpdate.Nickname + "'"
-	log.Print(baseSQL)
 
 	res, err := p.conn.Exec(baseSQL)
 	if err != nil {
