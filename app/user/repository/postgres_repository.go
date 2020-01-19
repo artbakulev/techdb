@@ -4,6 +4,7 @@ import (
 	"github.com/artbakulev/techdb/app/models"
 	"github.com/artbakulev/techdb/app/user"
 	"github.com/jackc/pgx"
+	"log"
 )
 
 type postgresUserRepository struct {
@@ -18,7 +19,7 @@ func (p postgresUserRepository) GetByNickname(nickname string) (models.User, *mo
 	u := models.User{}
 	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM users WHERE nickname = $1`, nickname)
 	if err != nil {
-		return models.User{}, models.NewError(500, "cannot get user by nickname", err.Error())
+		return models.User{}, models.NewError(500, models.InternalError, err.Error())
 	}
 	defer res.Close()
 
@@ -51,7 +52,7 @@ func (p postgresUserRepository) GetByEmail(email string) (models.User, *models.E
 }
 
 func (p postgresUserRepository) Create(userNew models.User) (models.User, *models.Error) {
-	res, err := p.conn.Exec(`INSERT INTO forum_users (nickname, fullname, email, about) VALUES ($1, $2, $3, $4)`,
+	res, err := p.conn.Exec(`INSERT INTO users (nickname, fullname, email, about) VALUES ($1, $2, $3, $4)`,
 		userNew.Nickname, userNew.Fullname, userNew.Email, userNew.About)
 	if err != nil {
 		return models.User{}, models.NewError(500, models.CreateError, err.Error())
@@ -71,7 +72,7 @@ func (p postgresUserRepository) Update(userUpdate models.User) (models.User, *mo
 		return updatedUser, nil
 	}
 
-	baseSQL := "Update forum_users SET"
+	baseSQL := "UPDATE users SET"
 	if userUpdate.Fullname == "" {
 		baseSQL += " fullname = fullname,"
 	} else {
@@ -91,10 +92,11 @@ func (p postgresUserRepository) Update(userUpdate models.User) (models.User, *mo
 	}
 
 	baseSQL += " WHERE nickname = '" + userUpdate.Nickname + "'"
+	log.Print(baseSQL)
 
 	res, err := p.conn.Exec(baseSQL)
 	if err != nil {
-		return models.User{}, models.NewError(409, models.UpdateError, err.Error())
+		return models.User{}, models.NewError(500, models.UpdateError, err.Error())
 	}
 
 	if res.RowsAffected() == 0 {

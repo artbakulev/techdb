@@ -1,6 +1,9 @@
 package models
 
-import "log"
+import (
+	"github.com/valyala/fasthttp"
+	"log"
+)
 
 const (
 	CreateError     = "ошибка создания объекта"
@@ -11,6 +14,11 @@ const (
 	ConflictError   = "военный конфликт"
 	BadRequestError = "невалидный запрос"
 	DBError         = "конфикт данных в базе"
+)
+
+var (
+	BadRequestErrorBytes = []byte("{\"message\": \"невалидный запрос\"")
+	InternalErrorBytes   = []byte("{\"message\": \"внутренняя ошибка\"")
 )
 
 type Error struct {
@@ -36,4 +44,10 @@ func (e Error) MessageToBytes() []byte {
 
 func (e Error) Log() {
 	log.Print("Error: ", e.StatusCode, e.Message)
+}
+
+func (e Error) SetToContext(ctx *fasthttp.RequestCtx) {
+	ctx.SetStatusCode(e.StatusCode)
+	ctx.SetBody(e.MessageToBytes())
+	e.Log() //	TODO: убрать на проде
 }
