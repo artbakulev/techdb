@@ -24,7 +24,7 @@ func (p postgresForumRepository) GetBySlug(slug string) (models.Forum, *models.E
 	f := models.Forum{}
 
 	if res.Next() {
-		err := res.Scan(&f.Posts, &f.Slug, &f.Threads, &f.Title, &f.User)
+		err := res.Scan(&f.Slug, &f.Title, &f.User, &f.Threads, &f.Posts)
 		if err != nil {
 			return models.Forum{}, models.NewError(500, models.DBParsingError, err.Error())
 		}
@@ -43,7 +43,7 @@ func (p postgresForumRepository) Create(user models.User, forumNew models.Forum)
 	_, err := p.conn.Exec(`INSERT INTO forums (slug, title, "user", posts, threads) VALUES ($1, $2, $3, $4, $5)`,
 		forumNew.Slug, forumNew.Title, forumNew.User, forumNew.Posts, forumNew.Threads)
 	if err != nil {
-		return models.Forum{}, models.NewError(500, models.CreateError, err.Error())
+		return models.Forum{}, models.NewError(409, models.CreateError)
 	}
 
 	return forumNew, nil

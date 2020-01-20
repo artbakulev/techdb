@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-var nicknamePattern = regexp.MustCompile("^[A-Za-z0-9_]+$")
+var nicknamePattern = regexp.MustCompile("^[A-Za-z0-9_.]+$")
 
 func ValidateNickname(nickname string) *models.Error {
 	if !nicknamePattern.MatchString(nickname) {

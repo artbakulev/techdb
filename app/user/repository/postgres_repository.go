@@ -16,6 +16,7 @@ func NewPostgresUserRepository(db *pgx.ConnPool) user.Repository {
 
 func (p postgresUserRepository) GetByNickname(nickname string) (models.User, *models.Error) {
 	u := models.User{}
+
 	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM users WHERE nickname = $1`, nickname)
 	if err != nil {
 		return models.User{}, models.NewError(500, models.InternalError, err.Error())
@@ -47,6 +48,7 @@ func (p postgresUserRepository) GetByEmail(email string) (models.User, *models.E
 		}
 		return u, nil
 	}
+
 	return models.User{}, models.NewError(404, models.NotFoundError)
 }
 
@@ -54,11 +56,11 @@ func (p postgresUserRepository) Create(userNew models.User) (models.User, *model
 	res, err := p.conn.Exec(`INSERT INTO users (nickname, fullname, email, about) VALUES ($1, $2, $3, $4)`,
 		userNew.Nickname, userNew.Fullname, userNew.Email, userNew.About)
 	if err != nil {
-		return models.User{}, models.NewError(500, models.CreateError, err.Error())
+		return models.User{}, models.NewError(409, models.CreateError, err.Error())
 	}
 
 	if res.RowsAffected() == 0 {
-		return models.User{}, models.NewError(500, models.CreateError)
+		return models.User{}, models.NewError(409, models.CreateError)
 	}
 
 	return userNew, nil
@@ -94,7 +96,7 @@ func (p postgresUserRepository) Update(userUpdate models.User) (models.User, *mo
 
 	res, err := p.conn.Exec(baseSQL)
 	if err != nil {
-		return models.User{}, models.NewError(500, models.UpdateError, err.Error())
+		return models.User{}, models.NewError(409, models.UpdateError)
 	}
 
 	if res.RowsAffected() == 0 {
@@ -110,11 +112,11 @@ func (p postgresUserRepository) GetByForum(forum models.Forum, query models.Post
 	baseSQL := `SELECT about, email, fullname, fu.nickname FROM users_forum JOIN users u ON u.nickname = users_forum.nickname`
 
 	baseSQL += ` where slug = '` + forum.Slug + `'`
-	if query.Since > 0 {
+	if query.Since != "" {
 		if query.Desc {
-			baseSQL += ` AND u.nickname < '` + query.GetStringSince() + `'`
+			baseSQL += ` AND u.nickname < '` + query.Since + `'`
 		} else {
-			baseSQL += ` AND u.nickname > '` + query.GetStringSince() + `'`
+			baseSQL += ` AND u.nickname > '` + query.Since + `'`
 		}
 	}
 

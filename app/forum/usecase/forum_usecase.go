@@ -4,6 +4,7 @@ import (
 	"github.com/artbakulev/techdb/app/forum"
 	"github.com/artbakulev/techdb/app/models"
 	"github.com/artbakulev/techdb/app/user"
+	"log"
 )
 
 type forumUsecase struct {
@@ -20,6 +21,8 @@ func NewForumUsecase(userRepo user.Repository, forumRepo forum.Repository) forum
 
 func (f forumUsecase) CreateForum(forumNew models.Forum) (models.Forum, *models.Error) {
 	author, err := f.userRepo.GetByNickname(forumNew.User)
+	log.Printf("%v", author)
+
 	if err != nil {
 		return models.Forum{}, err
 	}

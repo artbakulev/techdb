@@ -101,14 +101,10 @@ func (p PostHandler) GetMany(ctx *fasthttp.RequestCtx) {
 	query := models.PostsRequestQuery{
 		ThreadID:   id,
 		ThreadSlug: slugOrId,
-		Limit:      0,
-		Since:      0,
-		Sort:       "",
-		Desc:       false,
 	}
 
 	query.Limit = queryWorker.GetIntParam(ctx, "limit")
-	query.Since = queryWorker.GetInt64Param(ctx, "since")
+	query.Since = queryWorker.GetStringParam(ctx, "since")
 	query.Sort = queryWorker.GetStringParam(ctx, "sort")
 	query.Desc = queryWorker.GetBoolParam(ctx, "desc")
 

@@ -23,7 +23,7 @@ func NewUserHandler(router *fasthttprouter.Router, usecase user.Usecase) {
 
 func (u UserHandler) GetUser(ctx *fasthttp.RequestCtx) {
 	nickname := ctx.UserValue("nickname")
-	foundUser, err := u.usecase.GetUserByEmailOrByNickname(nickname.(string), false)
+	foundUser, err := u.usecase.GetUserByNickname(nickname.(string))
 	if err != nil {
 		err.SetToContext(ctx)
 		return
@@ -80,18 +80,32 @@ func (u UserHandler) CreateUser(ctx *fasthttp.RequestCtx) {
 	buffer.Nickname = nickname
 	returnUser, e := u.usecase.CreateUser(buffer)
 	if e != nil {
-		returnUser, e = u.usecase.GetUserByEmailOrByNickname(nickname, false)
-		if e != nil {
-			e.SetToContext(ctx)
+		foundUsers := models.Users{}
+		ctx.SetStatusCode(409)
+		returnUserByNickname, e := u.usecase.GetUserByNickname(nickname)
+		if e == nil {
+			foundUsers = append(foundUsers, returnUserByNickname)
+		}
+		returnUserByEmail, e := u.usecase.GetUserByEmail(buffer.Email)
+		if e == nil && returnUserByNickname.Email != returnUserByEmail.Email {
+			foundUsers = append(foundUsers, returnUserByEmail)
+		}
+		jsonBlob, err := foundUsers.MarshalJSON()
+		if err != nil {
+			ctx.SetStatusCode(500)
+			ctx.SetBody(models.InternalErrorBytes)
 			return
 		}
-		ctx.SetStatusCode(409)
+		ctx.SetBody(jsonBlob)
+	} else {
+		ctx.SetStatusCode(201)
+		jsonBlob, err := returnUser.MarshalJSON()
+		if err != nil {
+			ctx.SetStatusCode(500)
+			ctx.SetBody(models.InternalErrorBytes)
+			return
+		}
+		ctx.SetBody(jsonBlob)
 	}
-	jsonBlob, err := returnUser.MarshalJSON()
-	if err != nil {
-		ctx.SetStatusCode(500)
-		ctx.SetBody(models.InternalErrorBytes)
-		return
-	}
-	ctx.SetBody(jsonBlob)
+
 }

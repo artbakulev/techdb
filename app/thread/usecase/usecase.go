@@ -34,18 +34,21 @@ func (t threadUsecase) GetThreadBySlugOrID(data string, isSlug bool) (models.Thr
 }
 
 func (t threadUsecase) CreateThread(slug string, thread models.Thread) (models.Thread, *models.Error) {
-	foundForum, err := t.forumRepo.GetBySlug(slug)
+	foundForum, err := t.forumRepo.GetBySlug(thread.Forum)
 	if err != nil {
 		return models.Thread{}, err
 	}
 	foundUser, err := t.userRepo.GetByNickname(thread.Author)
 	if err != nil {
+
 		return models.Thread{}, err
 	}
 	createdThread, err := t.threadRepo.Create(foundForum, foundUser, thread)
-	if err.StatusCode == 409 {
+
+	if err != nil && err.StatusCode == 409 {
 		return t.threadRepo.GetBySlug(slug)
 	}
+
 	return createdThread, err
 }
 

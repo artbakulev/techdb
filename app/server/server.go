@@ -41,7 +41,7 @@ func NewServer(host string, connection *pgx.ConnPool) *server {
 	forumUsecase := usecase2.NewForumUsecase(userRepo, forumRepo)
 	serviceUsecase := usecase3.NewServiceUsecase(serviceRepo)
 	threadUsecase := usecase4.NewThreadUsecase(threadRepo, userRepo, forumRepo)
-	postUsecase := usecase5.NewPostUsecase(userRepo, postRepo)
+	postUsecase := usecase5.NewPostUsecase(userRepo, postRepo, threadRepo, forumRepo)
 	voteUsecase := usecase6.NewVoteUsecase(voteRepo, threadRepo)
 
 	router := fasthttprouter.New()
@@ -49,7 +49,7 @@ func NewServer(host string, connection *pgx.ConnPool) *server {
 	http.NewUserHandler(router, userUsecase)
 	http2.NewForumHandler(router, forumUsecase)
 	http3.NewServiceHandler(router, serviceUsecase)
-	http4.NewThreadHandler(router, threadUsecase)
+	http4.NewThreadHandler(router, threadUsecase, forumUsecase)
 	http5.NewPostHandler(router, postUsecase)
 	http6.NewVoteHandler(router, voteUsecase)
 

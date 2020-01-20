@@ -86,5 +86,74 @@ CREATE TABLE users_forum
 CREATE INDEX idx_users_forum_nickname ON users_forum (nickname);
 CREATE INDEX idx_users_forum_slug ON users_forum (slug);
 
+CREATE OR REPLACE FUNCTION new_thread() RETURNS TRIGGER AS
+$body$
+BEGIN
+    UPDATE forums
+    SET threads = threads + 1
+    WHERE slug = NEW.forum;
+    RETURN NEW;
+END;
+$body$ LANGUAGE plpgsql;
 
--- TODO: triggers for forum stats
+CREATE TRIGGER new_thread_trigger
+    AFTER INSERT
+    ON threads
+    FOR EACH ROW
+EXECUTE PROCEDURE new_thread();
+
+
+CREATE OR REPLACE FUNCTION new_path() RETURNS TRIGGER AS
+$body$
+BEGIN
+    NEW.path = (SELECT path FROM Post WHERE id = NEW.parent) || NEW.id;
+    RETURN NEW;
+END;
+$body$ LANGUAGE plpgsql;
+
+CREATE TRIGGER new_path_trigger
+    BEFORE INSERT
+    ON posts
+    FOR EACH ROW
+EXECUTE PROCEDURE new_path();
+
+
+CREATE OR REPLACE FUNCTION insert_users_forum() RETURNS TRIGGER AS
+$body$
+BEGIN
+    INSERT INTO users_forum(slug, nickname)
+    VALUES (NEW.forum, NEW.author)
+    ON CONFLICT DO NOTHING;
+    RETURN NEW;
+END;
+$body$ LANGUAGE plpgsql;
+
+CREATE TRIGGER insert_forum_user_trigger
+    AFTER INSERT
+    ON threads
+    FOR EACH ROW
+EXECUTE PROCEDURE insert_users_forum();
+
+
+CREATE OR REPLACE FUNCTION update_votes() RETURNS TRIGGER AS
+$body$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        UPDATE threads
+        SET votes = votes + NEW.voice
+        WHERE id = NEW.thread;
+    ELSE
+        UPDATE threads
+        SET votes = votes - OLD.voice + NEW.voice
+        WHERE id = NEW.thread;
+    END IF;
+    RETURN NEW;
+END;
+$body$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER update_vote_trigger
+    AFTER UPDATE OR INSERT
+    ON votes
+    FOR EACH ROW
+EXECUTE PROCEDURE update_votes();

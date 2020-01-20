@@ -16,32 +16,8 @@ func NewForumHandler(router *fasthttprouter.Router, usecase forum.Usecase) {
 	handler := &ForumHandler{
 		usecase: usecase,
 	}
-	router.POST("/api/forum/create", handler.CreateForum)
 	router.GET("/api/forum/:slug/details", handler.GetForumBySlug)
-	router.GET("/forum/:slug/users", handler.GetForumUsers)
-}
-
-func (f ForumHandler) CreateForum(ctx *fasthttp.RequestCtx) {
-	var buffer models.Forum
-	body := ctx.PostBody()
-	err := buffer.UnmarshalJSON(body)
-	if err != nil {
-		ctx.SetStatusCode(400)
-		ctx.SetBody(models.BadRequestErrorBytes)
-		return
-	}
-	createdForum, e := f.usecase.CreateForum(buffer)
-	if e != nil {
-		e.SetToContext(ctx)
-		return
-	}
-	jsonBlob, err := createdForum.MarshalJSON()
-	if err != nil {
-		ctx.SetStatusCode(500)
-		ctx.SetBody(models.InternalErrorBytes)
-		return
-	}
-	ctx.SetBody(jsonBlob)
+	router.GET("/api/forum/:slug/users", handler.GetForumUsers)
 }
 
 func (f ForumHandler) GetForumBySlug(ctx *fasthttp.RequestCtx) {
@@ -71,7 +47,7 @@ func (f ForumHandler) GetForumUsers(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 	query := models.PostsRequestQuery{
 		Limit: queryWorker.GetIntParam(ctx, "limit"),
-		Since: queryWorker.GetInt64Param(ctx, "since"),
+		Since: queryWorker.GetStringParam(ctx, "since"),
 		Desc:  queryWorker.GetBoolParam(ctx, "desc"),
 	}
 	users, err := f.usecase.GetForumUsers(slug, query)

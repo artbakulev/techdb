@@ -12,7 +12,7 @@ type PostsRequestQuery struct {
 	ThreadID   int64  `json:"id,omitempty"`
 	ThreadSlug string `json:"slug,omitempty"`
 	Limit      int    `json:"limit,omitempty"`
-	Since      int64  `json:"since,omitempty"`
+	Since      string `json:"since,omitempty"`
 	Sort       string `json:"sort,omitempty"`
 	Desc       bool   `json:"desc,omitempty"`
 }
@@ -25,8 +25,4 @@ type PostsRelatedQuery struct {
 
 func (p PostsRequestQuery) GetStringLimit() string {
 	return strconv.Itoa(p.Limit)
-}
-
-func (p PostsRequestQuery) GetStringSince() string {
-	return strconv.FormatInt(p.Since, 10)
 }

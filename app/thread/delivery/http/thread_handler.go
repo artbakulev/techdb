@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/artbakulev/techdb/app/forum"
 	"github.com/artbakulev/techdb/app/models"
 	"github.com/artbakulev/techdb/app/thread"
 	"github.com/artbakulev/techdb/pkg/queryWorker"
@@ -10,18 +11,22 @@ import (
 )
 
 type ThreadHandler struct {
-	usecase thread.Usecase
+	usecase      thread.Usecase
+	extraUsecase forum.Usecase //	из-за проблемы в fasthttprouter
 }
 
-func NewThreadHandler(router *fasthttprouter.Router, usecase thread.Usecase) {
+func NewThreadHandler(router *fasthttprouter.Router, usecase thread.Usecase, extraUsecase forum.Usecase) {
 	handler := &ThreadHandler{
-		usecase: usecase,
+		usecase:      usecase,
+		extraUsecase: extraUsecase,
 	}
 
-	router.POST("/forum/:slug/create", handler.CreateThread)
-	router.GET("/forum/:slug/threads", handler.GetThreads)
-	router.POST("/thread/:slug_or_id/details", handler.UpdateThread)
-	router.GET("/thread/:slug_or_id/details", handler.GetThread)
+	//router.POST("/api/forum/:slug/create", handler.GetHandler)
+	router.POST("/api/forum/:slug", handler.CreateForum)
+	router.POST("/api/forum/:slug/create", handler.CreateThread)
+	router.GET("/api/forum/:slug/threads", handler.GetThreads)
+	router.POST("/api/thread/:slug_or_id/details", handler.UpdateThread)
+	router.GET("/api/thread/:slug_or_id/details", handler.GetThread)
 }
 
 func (h ThreadHandler) CreateThread(ctx *fasthttp.RequestCtx) {
@@ -35,9 +40,8 @@ func (h ThreadHandler) CreateThread(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	createdThread.Slug = slug
-
 	createdThread, e := h.usecase.CreateThread(slug, createdThread)
+	//createdThread.Slug = slug
 
 	if e != nil {
 		e.SetToContext(ctx)
@@ -51,6 +55,7 @@ func (h ThreadHandler) CreateThread(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	ctx.SetStatusCode(201)
 	ctx.SetBody(jsonBlob)
 }
 
@@ -60,7 +65,7 @@ func (h ThreadHandler) GetThreads(ctx *fasthttp.RequestCtx) {
 		ThreadID:   0,
 		ThreadSlug: "",
 		Limit:      queryWorker.GetIntParam(ctx, "limit"),
-		Since:      queryWorker.GetInt64Param(ctx, "since"),
+		Since:      queryWorker.GetStringParam(ctx, "since"),
 		Sort:       "",
 		Desc:       queryWorker.GetBoolParam(ctx, "desc"),
 	}
@@ -141,4 +146,34 @@ func (h ThreadHandler) GetThread(ctx *fasthttp.RequestCtx) {
 
 	ctx.SetBody(jsonBlob)
 
+}
+
+func (f ThreadHandler) CreateForum(ctx *fasthttp.RequestCtx) {
+	var buffer models.Forum
+	body := ctx.PostBody()
+	err := buffer.UnmarshalJSON(body)
+	if err != nil {
+		ctx.SetStatusCode(400)
+		ctx.SetBody(models.BadRequestErrorBytes)
+		return
+	}
+	createdForum, e := f.extraUsecase.CreateForum(buffer)
+	if e != nil {
+		createdForum, e = f.extraUsecase.GetForumBySlug(buffer.Slug)
+		if e != nil {
+			e.SetToContext(ctx)
+			return
+		}
+		ctx.SetStatusCode(409)
+
+	} else {
+		ctx.SetStatusCode(201)
+	}
+	jsonBlob, err := createdForum.MarshalJSON()
+	if err != nil {
+		ctx.SetStatusCode(500)
+		ctx.SetBody(models.InternalErrorBytes)
+		return
+	}
+	ctx.SetBody(jsonBlob)
 }

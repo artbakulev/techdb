@@ -22,11 +22,11 @@ func (p postsSQLGenerator) FlatSort() string {
 
 	baseSQL = "SELECT author, created, forum, id, isedited, message, parent, thread FROM posts WHERE thread = " + strID
 
-	if p.query.Since != 0 {
+	if p.query.Since != "" {
 		if p.query.Desc {
-			baseSQL += " AND id < " + strconv.FormatInt(p.query.Since, 10)
+			baseSQL += " AND id < " + p.query.Since
 		} else {
-			baseSQL += " AND id > " + strconv.FormatInt(p.query.Since, 10)
+			baseSQL += " AND id > " + p.query.Since
 		}
 	}
 
@@ -47,11 +47,11 @@ func (p postsSQLGenerator) TreeSort() string {
 
 	baseSQL = "SELECT author, created, forum, id, isedited, message, parent, thread FROM posts WHERE thread = " + strID
 
-	if p.query.Since != 0 {
+	if p.query.Since != "" {
 		if p.query.Desc {
-			baseSQL += " AND path < (SELECT path FROM posts WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
+			baseSQL += " AND path < (SELECT path FROM posts WHERE id = " + p.query.Since + ")"
 		} else {
-			baseSQL += " AND path > (SELECT path FROM posts WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
+			baseSQL += " AND path > (SELECT path FROM posts WHERE id = " + p.query.Since + ")"
 		}
 	}
 
@@ -73,11 +73,11 @@ func (p postsSQLGenerator) ParentTreeSort() string {
 		" IN (SELECT id FROM posts WHERE thread = " + strconv.FormatInt(int64(p.thread.ID), 10) +
 		" AND parent = 0"
 
-	if p.query.Since != 0 {
+	if p.query.Since != "" {
 		if p.query.Desc {
-			baseSQL += " AND path[1] < (SELECT path[1] FROM posts WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
+			baseSQL += " AND path[1] < (SELECT path[1] FROM posts WHERE id = " + p.query.Since + ")"
 		} else {
-			baseSQL += " AND path[1] > (SELECT path[1] FROM posts WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
+			baseSQL += " AND path[1] > (SELECT path[1] FROM posts WHERE id = " + p.query.Since + ")"
 		}
 	}
 

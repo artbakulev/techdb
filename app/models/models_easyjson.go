@@ -42,6 +42,8 @@ func easyjsonD2b7633eDecodeGithubComArtbakulevTechdbAppModels(in *jlexer.Lexer, 
 			out.Voice = int8(in.Int8())
 		case "thread":
 			out.Thread = int64(in.Int64())
+		case "thread_slug":
+			out.ThreadSlug = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -66,10 +68,15 @@ func easyjsonD2b7633eEncodeGithubComArtbakulevTechdbAppModels(out *jwriter.Write
 		out.RawString(prefix)
 		out.Int8(int8(in.Voice))
 	}
-	{
+	if in.Thread != 0 {
 		const prefix string = ",\"thread\":"
 		out.RawString(prefix)
 		out.Int64(int64(in.Thread))
+	}
+	if in.ThreadSlug != "" {
+		const prefix string = ",\"thread_slug\":"
+		out.RawString(prefix)
+		out.String(string(in.ThreadSlug))
 	}
 	out.RawByte('}')
 }
@@ -342,7 +349,7 @@ func easyjsonD2b7633eDecodeGithubComArtbakulevTechdbAppModels4(in *jlexer.Lexer,
 		}
 		switch key {
 		case "id":
-			out.ID = int32(in.Int32())
+			out.ID = int64(in.Int64())
 		case "slug":
 			out.Slug = string(in.String())
 		case "title":
@@ -367,7 +374,7 @@ func easyjsonD2b7633eEncodeGithubComArtbakulevTechdbAppModels4(out *jwriter.Writ
 		const prefix string = ",\"id\":"
 		first = false
 		out.RawString(prefix[1:])
-		out.Int32(int32(in.ID))
+		out.Int64(int64(in.ID))
 	}
 	if in.Slug != "" {
 		const prefix string = ",\"slug\":"
@@ -445,7 +452,7 @@ func easyjsonD2b7633eDecodeGithubComArtbakulevTechdbAppModels5(in *jlexer.Lexer,
 		}
 		switch key {
 		case "id":
-			out.ID = int32(in.Int32())
+			out.ID = int64(in.Int64())
 		case "slug":
 			out.Slug = string(in.String())
 		case "author":
@@ -461,7 +468,7 @@ func easyjsonD2b7633eDecodeGithubComArtbakulevTechdbAppModels5(in *jlexer.Lexer,
 		case "title":
 			out.Title = string(in.String())
 		case "votes":
-			out.Votes = int32(in.Int32())
+			out.Votes = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -480,7 +487,7 @@ func easyjsonD2b7633eEncodeGithubComArtbakulevTechdbAppModels5(out *jwriter.Writ
 		const prefix string = ",\"id\":"
 		first = false
 		out.RawString(prefix[1:])
-		out.Int32(int32(in.ID))
+		out.Int64(int64(in.ID))
 	}
 	if in.Slug != "" {
 		const prefix string = ",\"slug\":"
@@ -525,7 +532,7 @@ func easyjsonD2b7633eEncodeGithubComArtbakulevTechdbAppModels5(out *jwriter.Writ
 	if in.Votes != 0 {
 		const prefix string = ",\"votes\":"
 		out.RawString(prefix)
-		out.Int32(int32(in.Votes))
+		out.Int64(int64(in.Votes))
 	}
 	out.RawByte('}')
 }
@@ -666,7 +673,7 @@ func easyjsonD2b7633eDecodeGithubComArtbakulevTechdbAppModels7(in *jlexer.Lexer,
 		case "limit":
 			out.Limit = int(in.Int())
 		case "since":
-			out.Since = int64(in.Int64())
+			out.Since = string(in.String())
 		case "sort":
 			out.Sort = string(in.String())
 		case "desc":
@@ -711,7 +718,7 @@ func easyjsonD2b7633eEncodeGithubComArtbakulevTechdbAppModels7(out *jwriter.Writ
 		}
 		out.Int(int(in.Limit))
 	}
-	if in.Since != 0 {
+	if in.Since != "" {
 		const prefix string = ",\"since\":"
 		if first {
 			first = false
@@ -719,7 +726,7 @@ func easyjsonD2b7633eEncodeGithubComArtbakulevTechdbAppModels7(out *jwriter.Writ
 		} else {
 			out.RawString(prefix)
 		}
-		out.Int64(int64(in.Since))
+		out.String(string(in.Since))
 	}
 	if in.Sort != "" {
 		const prefix string = ",\"sort\":"
