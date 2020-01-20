@@ -21,6 +21,7 @@ func NewThreadHandler(router *fasthttprouter.Router, usecase thread.Usecase) {
 	router.POST("/forum/:slug/create", handler.CreateThread)
 	router.GET("/forum/:slug/threads", handler.GetThreads)
 	router.POST("/thread/:slug_or_id/details", handler.UpdateThread)
+	router.GET("/thread/:slug_or_id/details", handler.GetThread)
 }
 
 func (h ThreadHandler) CreateThread(ctx *fasthttp.RequestCtx) {
@@ -115,4 +116,29 @@ func (h ThreadHandler) UpdateThread(ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetBody(jsonBlob)
+}
+
+func (h ThreadHandler) GetThread(ctx *fasthttp.RequestCtx) {
+	slugOrId := ctx.UserValue("slug_or_id").(string)
+	id, _ := strconv.ParseInt(slugOrId, 10, 64)
+	isSlug := false
+	if id == 0 {
+		isSlug = true
+	}
+	existingThread, err := h.usecase.GetThreadBySlugOrID(slugOrId, isSlug)
+
+	if err != nil {
+		err.SetToContext(ctx)
+		return
+	}
+
+	jsonBlob, e := existingThread.MarshalJSON()
+	if e != nil {
+		ctx.SetStatusCode(500)
+		ctx.SetBody(models.InternalErrorBytes)
+		return
+	}
+
+	ctx.SetBody(jsonBlob)
+
 }

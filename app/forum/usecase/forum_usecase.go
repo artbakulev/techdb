@@ -29,3 +29,11 @@ func (f forumUsecase) CreateForum(forumNew models.Forum) (models.Forum, *models.
 func (f forumUsecase) GetForumBySlug(slug string) (models.Forum, *models.Error) {
 	return f.forumRepo.GetBySlug(slug)
 }
+
+func (f forumUsecase) GetForumUsers(slug string, query models.PostsRequestQuery) (models.Users, *models.Error) {
+	existingForum, err := f.forumRepo.GetBySlug(slug)
+	if err != nil {
+		return models.Users{}, err
+	}
+	return f.userRepo.GetByForum(existingForum, query)
+}

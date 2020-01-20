@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/artbakulev/techdb/app/forum"
 	"github.com/artbakulev/techdb/app/models"
+	"github.com/artbakulev/techdb/pkg/queryWorker"
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
 )
@@ -17,6 +18,7 @@ func NewForumHandler(router *fasthttprouter.Router, usecase forum.Usecase) {
 	}
 	router.POST("/api/forum/create", handler.CreateForum)
 	router.GET("/api/forum/:slug/details", handler.GetForumBySlug)
+	router.GET("/forum/:slug/users", handler.GetForumUsers)
 }
 
 func (f ForumHandler) CreateForum(ctx *fasthttp.RequestCtx) {
@@ -57,6 +59,30 @@ func (f ForumHandler) GetForumBySlug(ctx *fasthttp.RequestCtx) {
 
 	jsonBlob, err := existingForum.MarshalJSON()
 	if err != nil {
+		ctx.SetStatusCode(500)
+		ctx.SetBody(models.InternalErrorBytes)
+		return
+	}
+
+	ctx.SetBody(jsonBlob)
+}
+
+func (f ForumHandler) GetForumUsers(ctx *fasthttp.RequestCtx) {
+	slug := ctx.UserValue("slug").(string)
+	query := models.PostsRequestQuery{
+		Limit: queryWorker.GetIntParam(ctx, "limit"),
+		Since: queryWorker.GetInt64Param(ctx, "since"),
+		Desc:  queryWorker.GetBoolParam(ctx, "desc"),
+	}
+	users, err := f.usecase.GetForumUsers(slug, query)
+
+	if err != nil {
+		err.SetToContext(ctx)
+		return
+	}
+
+	jsonBlob, e := users.MarshalJSON()
+	if e != nil {
 		ctx.SetStatusCode(500)
 		ctx.SetBody(models.InternalErrorBytes)
 		return

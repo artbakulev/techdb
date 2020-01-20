@@ -105,3 +105,46 @@ func (p postgresUserRepository) Update(userUpdate models.User) (models.User, *mo
 
 	return updatedUser, nil
 }
+
+func (p postgresUserRepository) GetByForum(forum models.Forum, query models.PostsRequestQuery) (models.Users, *models.Error) {
+	baseSQL := `SELECT about, email, fullname, fu.nickname FROM users_forum JOIN users u ON u.nickname = users_forum.nickname`
+
+	baseSQL += ` where slug = '` + forum.Slug + `'`
+	if query.Since > 0 {
+		if query.Desc {
+			baseSQL += ` AND u.nickname < '` + query.GetStringSince() + `'`
+		} else {
+			baseSQL += ` AND u.nickname > '` + query.GetStringSince() + `'`
+		}
+	}
+
+	if query.Desc {
+		baseSQL += " ORDER BY nickname DESC"
+	} else {
+		baseSQL += " ORDER BY nickname ASC"
+	}
+
+	if query.Limit > 0 {
+		baseSQL += " LIMIT " + query.GetStringLimit()
+	}
+
+	res, err := p.conn.Query(baseSQL)
+	if err != nil {
+		return models.Users{}, models.NewError(500, models.DBParsingError, err.Error())
+	}
+	defer res.Close()
+
+	foundUsers := models.Users{}
+	buffer := models.User{}
+
+	for res.Next() {
+		err = res.Scan(&buffer.About, &buffer.Email, &buffer.Fullname, &buffer.Nickname)
+
+		if err != nil {
+			return models.Users{}, models.NewError(500, models.DBParsingError, err.Error())
+		}
+		foundUsers = append(foundUsers, buffer)
+	}
+
+	return foundUsers, nil
+}
