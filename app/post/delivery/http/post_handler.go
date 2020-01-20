@@ -5,6 +5,7 @@ import (
 	"github.com/artbakulev/techdb/app/post"
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
+	"strconv"
 	"strings"
 )
 
@@ -58,10 +59,74 @@ func (p PostHandler) UpdatePost(ctx *fasthttp.RequestCtx) {
 }
 
 func (p PostHandler) CreatePosts(ctx *fasthttp.RequestCtx) {
-	//	TODO: доделай завтра
+	slugOrId := ctx.UserValue("slug_or_id").(string)
+	id, _ := strconv.ParseInt(slugOrId, 10, 64)
+	if id == 0 {
+		id = -1
+	}
+
+	posts := models.Posts{}
+	err := posts.UnmarshalJSON(ctx.PostBody())
+	if err != nil {
+		ctx.SetStatusCode(400)
+		ctx.SetBody(models.BadRequestErrorBytes)
+		return
+	}
+	createdPosts, e := p.usecase.CreatePosts(slugOrId, id, posts)
+
+	if e != nil {
+		e.SetToContext(ctx)
+		return
+	}
+
+	jsonBlob, err := createdPosts.MarshalJSON()
+	if err != nil {
+		ctx.SetStatusCode(500)
+		ctx.SetBody(models.InternalErrorBytes)
+		return
+	}
+
+	ctx.SetBody(jsonBlob)
 }
 
-func (p PostHandler) GetMany(ctx *fasthttp.RequestCtx) {}
+func (p PostHandler) GetMany(ctx *fasthttp.RequestCtx) {
+
+	slugOrId := ctx.UserValue("slug_or_id").(string)
+	id, err := strconv.ParseInt(slugOrId, 10, 64)
+	if err != nil {
+		id = -1
+	}
+
+	query := models.PostsRequestQuery{
+		ThreadID:   id,
+		ThreadSlug: slugOrId,
+		Limit:      0,
+		Since:      0,
+		Sort:       "",
+		Desc:       false,
+	}
+
+	query.Limit, _ = strconv.Atoi(string(ctx.URI().QueryArgs().Peek("limit")))
+	query.Since, _ = strconv.ParseInt(string(ctx.URI().QueryArgs().Peek("since")), 10, 64)
+	query.Sort = string(ctx.URI().QueryArgs().Peek("sort"))
+	query.Desc, _ = strconv.ParseBool(string(ctx.URI().QueryArgs().Peek("desc")))
+
+	sortedPosts, e := p.usecase.GetThreadPosts(query)
+	if err != nil {
+		e.SetToContext(ctx)
+		return
+	}
+
+	jsonBlob, err := sortedPosts.MarshalJSON()
+	if err != nil {
+		ctx.SetStatusCode(500)
+		ctx.SetBody(models.InternalErrorBytes)
+		return
+	}
+
+	ctx.SetBody(jsonBlob)
+
+}
 
 func (p PostHandler) GetOne(ctx *fasthttp.RequestCtx) {
 	var id int64 = -1
@@ -71,7 +136,7 @@ func (p PostHandler) GetOne(ctx *fasthttp.RequestCtx) {
 		ctx.SetBody(models.BadRequestErrorBytes)
 		return
 	}
-	queryParams := strings.Split(ctx.URI().String(), ",")
+	queryParams := strings.Split(string(ctx.URI().QueryArgs().Peek("related")), ",")
 
 	var query models.PostsRelatedQuery
 

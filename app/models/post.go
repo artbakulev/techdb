@@ -31,4 +31,5 @@ type PostUpdate struct {
 	Message string `json:"message"`
 }
 
+//easyjson:json
 type Posts []Post
