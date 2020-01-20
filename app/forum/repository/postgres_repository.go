@@ -15,7 +15,7 @@ func NewPostgresForumRepository(db *pgx.ConnPool) forum.Repository {
 }
 
 func (p postgresForumRepository) GetBySlug(slug string) (models.Forum, *models.Error) {
-	res, err := p.conn.Query(`SELECT * FROM forum_forum WHERE slug = $1`, slug)
+	res, err := p.conn.Query(`SELECT * FROM forums WHERE slug = $1`, slug)
 	if err != nil {
 		return models.Forum{}, models.NewError(500, models.InternalError, err.Error())
 	}
@@ -40,7 +40,7 @@ func (p postgresForumRepository) GetBySlug(slug string) (models.Forum, *models.E
 func (p postgresForumRepository) Create(user models.User, forumNew models.Forum) (models.Forum, *models.Error) {
 	forumNew.User = user.Nickname
 
-	_, err := p.conn.Exec(`INSERT INTO forum_forum (slug, title, "user", posts, threads) VALUES ($1, $2, $3, $4, $5)`,
+	_, err := p.conn.Exec(`INSERT INTO forums (slug, title, "user", posts, threads) VALUES ($1, $2, $3, $4, $5)`,
 		forumNew.Slug, forumNew.Title, forumNew.User, forumNew.Posts, forumNew.Threads)
 	if err != nil {
 		return models.Forum{}, models.NewError(500, models.CreateError, err.Error())

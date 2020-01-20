@@ -20,7 +20,7 @@ func (p postsSQLGenerator) FlatSort() string {
 	strID := strconv.FormatInt(int64(p.thread.ID), 10)
 	baseSQL := ""
 
-	baseSQL = "SELECT author, created, forum, id, isedited, message, parent, thread FROM forum_post WHERE thread = " + strID
+	baseSQL = "SELECT author, created, forum, id, isedited, message, parent, thread FROM posts WHERE thread = " + strID
 
 	if p.query.Since != 0 {
 		if p.query.Desc {
@@ -45,13 +45,13 @@ func (p postsSQLGenerator) TreeSort() string {
 	strID := strconv.FormatInt(int64(p.thread.ID), 10)
 	baseSQL := ""
 
-	baseSQL = "SELECT author, created, forum, id, isedited, message, parent, thread FROM forum_post WHERE thread = " + strID
+	baseSQL = "SELECT author, created, forum, id, isedited, message, parent, thread FROM posts WHERE thread = " + strID
 
 	if p.query.Since != 0 {
 		if p.query.Desc {
-			baseSQL += " AND path < (SELECT path FROM forum_post WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
+			baseSQL += " AND path < (SELECT path FROM posts WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
 		} else {
-			baseSQL += " AND path > (SELECT path FROM forum_post WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
+			baseSQL += " AND path > (SELECT path FROM posts WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
 		}
 	}
 
@@ -69,15 +69,15 @@ func (p postsSQLGenerator) TreeSort() string {
 func (p postsSQLGenerator) ParentTreeSort() string {
 	baseSQL := ""
 
-	baseSQL = "SELECT author, created, forum, id, isedited, message, parent, thread FROM forum_post WHERE path[1]" +
-		" IN (SELECT id FROM forum_post WHERE thread = " + strconv.FormatInt(int64(p.thread.ID), 10) +
+	baseSQL = "SELECT author, created, forum, id, isedited, message, parent, thread FROM posts WHERE path[1]" +
+		" IN (SELECT id FROM posts WHERE thread = " + strconv.FormatInt(int64(p.thread.ID), 10) +
 		" AND parent = 0"
 
 	if p.query.Since != 0 {
 		if p.query.Desc {
-			baseSQL += " AND path[1] < (SELECT path[1] FROM forum_post WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
+			baseSQL += " AND path[1] < (SELECT path[1] FROM posts WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
 		} else {
-			baseSQL += " AND path[1] > (SELECT path[1] FROM forum_post WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
+			baseSQL += " AND path[1] > (SELECT path[1] FROM posts WHERE id = " + strconv.FormatInt(p.query.Since, 10) + ")"
 		}
 	}
 

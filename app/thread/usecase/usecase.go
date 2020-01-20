@@ -42,7 +42,11 @@ func (t threadUsecase) CreateThread(slug string, thread models.Thread) (models.T
 	if err != nil {
 		return models.Thread{}, err
 	}
-	return t.threadRepo.Create(foundForum, foundUser, thread)
+	createdThread, err := t.threadRepo.Create(foundForum, foundUser, thread)
+	if err.StatusCode == 409 {
+		return t.threadRepo.GetBySlug(slug)
+	}
+	return createdThread, err
 }
 
 func (t threadUsecase) UpdateThread(threadUpdate models.ThreadUpdate) (models.Thread, *models.Error) {
@@ -51,4 +55,13 @@ func (t threadUsecase) UpdateThread(threadUpdate models.ThreadUpdate) (models.Th
 		return models.Thread{}, err
 	}
 	return t.threadRepo.Update(foundThread, threadUpdate)
+}
+
+func (t threadUsecase) GetThreads(forumSlug string, query models.PostsRequestQuery) (models.Threads, *models.Error) {
+	existingForum, err := t.forumRepo.GetBySlug(forumSlug)
+	if err != nil {
+		return models.Threads{}, err
+	}
+
+	return t.threadRepo.GetMany(existingForum, query)
 }

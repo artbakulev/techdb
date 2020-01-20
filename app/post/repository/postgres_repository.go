@@ -16,7 +16,7 @@ type postgresPostRepository struct {
 
 func (p postgresPostRepository) GetByID(id int64) (models.Post, *models.Error) {
 
-	res, err := p.conn.Query("SELECT author, created, forum, id, isedited, message, parent, thread, path FROM forum_post WHERE id = $1", id)
+	res, err := p.conn.Query("SELECT author, created, forum, id, isedited, message, parent, thread, path FROM posts WHERE id = $1", id)
 	if err != nil {
 		return models.Post{}, models.NewError(404, models.NotFoundError, err.Error())
 	}
@@ -61,7 +61,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 		}
 	}
 
-	postIdsRows, err := tx.Query(fmt.Sprintf(`SELECT nextval(pg_get_serial_sequence('forum_post', 'id')) FROM generate_series(1, %d);`, len(posts)))
+	postIdsRows, err := tx.Query(fmt.Sprintf(`SELECT nextval(pg_get_serial_sequence('posts', 'id')) FROM generate_series(1, %d);`, len(posts)))
 	if err != nil {
 		return models.Posts{}, models.NewError(404, models.NotFoundError, err.Error())
 	}
@@ -79,7 +79,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 
 	posts[0].Path = append(mapParents[posts[0].Parent].Path, postIds[0])
 
-	err = tx.QueryRow(`INSERT INTO forum_post (id, author, forum, message, parent, thread, path) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING created`,
+	err = tx.QueryRow(`INSERT INTO posts (id, author, forum, message, parent, thread, path) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING created`,
 		postIds[0], posts[0].Author, thread.Forum, posts[0].Message, posts[0].Parent,
 		thread.ID,
 		"{"+strings.Trim(strings.Replace(fmt.Sprint(posts[0].Path), " ", ",", -1), "[]")+"}").
@@ -103,7 +103,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 
 		item.Path = append(mapParents[item.Parent].Path, postIds[i])
 
-		resInsert, err := tx.Exec(`INSERT INTO forum_post (id, author, created, forum, message, parent, thread, path) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		resInsert, err := tx.Exec(`INSERT INTO posts (id, author, created, forum, message, parent, thread, path) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			postIds[i], item.Author, now, thread.Forum, item.Message, item.Parent, thread.ID,
 			"{"+strings.Trim(strings.Replace(fmt.Sprint(item.Path), " ", ",", -1), "[]")+"}")
 
@@ -140,7 +140,7 @@ func (p postgresPostRepository) Update(post models.Post, postUpdate models.PostU
 		return post, nil
 	}
 
-	res, err := p.conn.Exec("UPDATE forum_post SET message = $1, isedited = true WHERE id = $2", postUpdate.Message, post.ID)
+	res, err := p.conn.Exec("UPDATE posts SET message = $1, isedited = true WHERE id = $2", postUpdate.Message, post.ID)
 	if err != nil {
 		return models.Post{}, models.NewError(409, models.UpdateError, err.Error())
 	}

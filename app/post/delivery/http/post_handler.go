@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/artbakulev/techdb/app/models"
 	"github.com/artbakulev/techdb/app/post"
+	"github.com/artbakulev/techdb/pkg/queryWorker"
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
 	"strconv"
@@ -106,10 +107,10 @@ func (p PostHandler) GetMany(ctx *fasthttp.RequestCtx) {
 		Desc:       false,
 	}
 
-	query.Limit, _ = strconv.Atoi(string(ctx.URI().QueryArgs().Peek("limit")))
-	query.Since, _ = strconv.ParseInt(string(ctx.URI().QueryArgs().Peek("since")), 10, 64)
-	query.Sort = string(ctx.URI().QueryArgs().Peek("sort"))
-	query.Desc, _ = strconv.ParseBool(string(ctx.URI().QueryArgs().Peek("desc")))
+	query.Limit = queryWorker.GetIntParam(ctx, "limit")
+	query.Since = queryWorker.GetInt64Param(ctx, "since")
+	query.Sort = queryWorker.GetStringParam(ctx, "sort")
+	query.Desc = queryWorker.GetBoolParam(ctx, "desc")
 
 	sortedPosts, e := p.usecase.GetThreadPosts(query)
 	if err != nil {

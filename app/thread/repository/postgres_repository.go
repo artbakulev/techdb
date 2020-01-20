@@ -22,7 +22,7 @@ func (p postgresThreadRepository) GetByID(id int64) (models.Thread, *models.Erro
 		return models.Thread{}, models.NewError(400, models.BadRequestError)
 	}
 
-	res, err := p.conn.Query(`SELECT * FROM forum_thread WHERE id = $1`, id)
+	res, err := p.conn.Query(`SELECT * FROM threads WHERE id = $1`, id)
 	if err != nil {
 		return models.Thread{}, models.NewError(404, models.NotFoundError)
 	}
@@ -49,7 +49,7 @@ func (p postgresThreadRepository) GetBySlug(slug string) (models.Thread, *models
 	}
 
 	t := models.Thread{}
-	res, err := p.conn.Query(`SELECT * FROM forum_thread WHERE slug = $1`, slug)
+	res, err := p.conn.Query(`SELECT * FROM threads WHERE slug = $1`, slug)
 
 	if err != nil {
 		return models.Thread{}, models.NewError(404, models.NotFoundError)
@@ -79,7 +79,7 @@ func (p postgresThreadRepository) Create(forum models.Forum, user models.User, t
 	defer tx.Rollback()
 
 	if thread.Slug == "" {
-		err := tx.QueryRow(`INSERT INTO forum_thread (author, forum, message, slug, title) VALUES ($1, $2, $3, $4, NULL, $5) RETURNING id`,
+		err := tx.QueryRow(`INSERT INTO threads (author, forum, message, slug, title) VALUES ($1, $2, $3, $4, NULL, $5) RETURNING id`,
 			thread.Author, thread.Created, thread.Forum, thread.Message,
 			thread.Title).Scan(&thread.ID)
 
@@ -87,7 +87,7 @@ func (p postgresThreadRepository) Create(forum models.Forum, user models.User, t
 			return models.Thread{}, models.NewError(409, models.ConflictError)
 		}
 	} else {
-		err := tx.QueryRow(`INSERT INTO forum_thread (author, created, forum, message, slug, title) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		err := tx.QueryRow(`INSERT INTO threads (author, created, forum, message, slug, title) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
 			thread.Author, thread.Created, thread.Forum, thread.Message, thread.Slug,
 			thread.Title).Scan(&thread.ID)
 
@@ -110,7 +110,7 @@ func (p postgresThreadRepository) Update(thread models.Thread, threadUpdate mode
 		return thread, nil
 	}
 
-	baseSQL := "UPDATE forum_thread SET"
+	baseSQL := "UPDATE threads SET"
 	if threadUpdate.Message == "" {
 		baseSQL += " message = message,"
 	} else {
@@ -137,4 +137,50 @@ func (p postgresThreadRepository) Update(thread models.Thread, threadUpdate mode
 	}
 
 	return thread, nil
+}
+
+func (p postgresThreadRepository) GetMany(forum models.Forum, query models.PostsRequestQuery) (models.Threads, *models.Error) {
+	baseSQL := "SELECT * FROM threads"
+
+	baseSQL += " WHERE forum = '" + forum.Slug + "'"
+
+	if query.Since != 0 {
+		if query.Desc {
+			baseSQL += " AND created <= '" + query.GetStringSince() + "'"
+		} else {
+			baseSQL += " AND created >= '" + query.GetStringSince() + "'"
+		}
+	}
+
+	if query.Desc {
+		baseSQL += " ORDER BY created DESC"
+	} else {
+		baseSQL += " ORDER BY created"
+	}
+
+	if query.Limit > 0 {
+		baseSQL += " LIMIT " + query.GetStringLimit()
+	}
+
+	res, err := p.conn.Query(baseSQL)
+	if err != nil {
+		return models.Threads{}, models.NewError(500, models.DBParsingError, err.Error())
+	}
+
+	buffer := models.Thread{}
+	existingThreads := models.Threads{}
+	//nullSlug := &pgtype.Varchar{}
+
+	for res.Next() {
+		err = res.Scan(&buffer.Author, &buffer.Created, &buffer.Forum,
+			&buffer.ID, &buffer.Message, &buffer.Slug, &buffer.Title, &buffer.Votes)
+
+		if err != nil {
+			return models.Threads{}, models.NewError(500, models.InternalError, err.Error())
+		}
+		//buffer.Slug = nullSlug.String
+		existingThreads = append(existingThreads, buffer)
+	}
+
+	return existingThreads, nil
 }

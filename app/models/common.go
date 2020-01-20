@@ -1,5 +1,7 @@
 package models
 
+import "strconv"
+
 const (
 	FLAT        = "flat"
 	TREE        = "tree"
@@ -19,4 +21,12 @@ type PostsRelatedQuery struct {
 	NeedAuthor bool `json:"need_author"`
 	NeedForum  bool `json:"need_forum"`
 	NeedThread bool `json:"need_thread"`
+}
+
+func (p PostsRequestQuery) GetStringLimit() string {
+	return strconv.Itoa(p.Limit)
+}
+
+func (p PostsRequestQuery) GetStringSince() string {
+	return strconv.FormatInt(p.Since, 10)
 }

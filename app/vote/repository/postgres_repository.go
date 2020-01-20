@@ -15,7 +15,7 @@ func NewPostgresVoteRepository(conn *pgx.ConnPool) vote.Repository {
 }
 
 func (p postgresVoteRepository) Create(vote models.Vote) *models.Error {
-	resInsert, err := p.conn.Exec(`INSERT INTO forum_vote (nickname, voice, thread) VALUES ($1, $2, $3)`,
+	resInsert, err := p.conn.Exec(`INSERT INTO votes (nickname, voice, thread) VALUES ($1, $2, $3)`,
 		vote.Nickname, vote.Voice, vote.Thread)
 
 	if err != nil {
@@ -30,7 +30,7 @@ func (p postgresVoteRepository) Create(vote models.Vote) *models.Error {
 }
 
 func (p postgresVoteRepository) Update(vote models.Vote) *models.Error {
-	res, err := p.conn.Exec(`UPDATE forum_vote SET voice = $1 WHERE nickname = $2 AND thread = $3`,
+	res, err := p.conn.Exec(`UPDATE votes SET voice = $1 WHERE nickname = $2 AND thread = $3`,
 		vote.Voice, vote.Nickname, vote.Thread)
 	if err != nil {
 		return models.NewError(500, models.UpdateError)
@@ -42,7 +42,7 @@ func (p postgresVoteRepository) Update(vote models.Vote) *models.Error {
 }
 
 func (p postgresVoteRepository) GetByNicknameAndThreadID(nickname string, threadID int32) (models.Vote, *models.Error) {
-	res, err := p.conn.Query(`SELECT * FROM forum_vote WHERE nickname = $1 AND thread = $2`, nickname, threadID)
+	res, err := p.conn.Query(`SELECT * FROM votes WHERE nickname = $1 AND thread = $2`, nickname, threadID)
 
 	if err != nil {
 		return models.Vote{}, models.NewError(404, models.NotFoundError)
