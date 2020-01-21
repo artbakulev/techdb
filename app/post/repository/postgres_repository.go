@@ -7,6 +7,7 @@ import (
 	"github.com/artbakulev/techdb/pkg/postsSQLGenerator"
 	"github.com/jackc/pgx"
 	"github.com/lib/pq"
+	"log"
 	"strings"
 )
 
@@ -86,6 +87,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 		Scan(&posts[0].Created)
 
 	if err != nil {
+		log.Print(2)
 		return models.Posts{}, models.NewError(500, models.CreateError, err.Error())
 	}
 

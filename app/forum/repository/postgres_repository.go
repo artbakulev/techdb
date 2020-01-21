@@ -30,9 +30,9 @@ func (p postgresForumRepository) GetBySlug(slug string) (models.Forum, *models.E
 		}
 	}
 
-	if f.Slug == "" {
-		return models.Forum{}, models.NewError(404, models.NotFoundError)
-	}
+	//if f.Slug == "" {
+	//	return models.Forum{}, models.NewError(404, models.NotFoundError)
+	//}
 
 	return f, nil
 }

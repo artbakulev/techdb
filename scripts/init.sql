@@ -106,7 +106,7 @@ EXECUTE PROCEDURE new_thread();
 CREATE OR REPLACE FUNCTION new_path() RETURNS TRIGGER AS
 $body$
 BEGIN
-    NEW.path = (SELECT path FROM Post WHERE id = NEW.parent) || NEW.id;
+    NEW.path = (SELECT path FROM posts WHERE id = NEW.parent) || NEW.id;
     RETURN NEW;
 END;
 $body$ LANGUAGE plpgsql;

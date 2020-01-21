@@ -14,9 +14,9 @@ func NewServiceUsecase(serviceRepo service.Repository) service.Usecase {
 }
 
 func (s serviceUsecase) ClearDB() *models.Error {
-	return s.ClearDB()
+	return s.serviceRepo.Clear()
 }
 
 func (s serviceUsecase) GetDBStatus() (models.Status, *models.Error) {
-	return s.GetDBStatus()
+	return s.serviceRepo.GetStatus()
 }

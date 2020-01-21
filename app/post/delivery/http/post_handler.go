@@ -27,7 +27,7 @@ func NewPostHandler(router *fasthttprouter.Router, usecase post.Usecase) {
 
 func (p PostHandler) UpdatePost(ctx *fasthttp.RequestCtx) {
 	var id int64 = -1
-	id = ctx.UserValue("id").(int64)
+	id, _ = strconv.ParseInt(ctx.UserValue("id").(string), 10, 64)
 	if id == -1 {
 		ctx.SetStatusCode(400)
 		ctx.SetBody(models.BadRequestErrorBytes)
@@ -73,6 +73,13 @@ func (p PostHandler) CreatePosts(ctx *fasthttp.RequestCtx) {
 		ctx.SetBody(models.BadRequestErrorBytes)
 		return
 	}
+
+	if len(posts) == 0 {
+		ctx.SetStatusCode(201)
+		ctx.SetBody([]byte{'[', ']'})
+		return
+	}
+
 	createdPosts, e := p.usecase.CreatePosts(slugOrId, id, posts)
 
 	if e != nil {
@@ -87,6 +94,7 @@ func (p PostHandler) CreatePosts(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	ctx.SetStatusCode(201)
 	ctx.SetBody(jsonBlob)
 }
 
@@ -109,7 +117,7 @@ func (p PostHandler) GetMany(ctx *fasthttp.RequestCtx) {
 	query.Desc = queryWorker.GetBoolParam(ctx, "desc")
 
 	sortedPosts, e := p.usecase.GetThreadPosts(query)
-	if err != nil {
+	if e != nil {
 		e.SetToContext(ctx)
 		return
 	}
@@ -127,7 +135,7 @@ func (p PostHandler) GetMany(ctx *fasthttp.RequestCtx) {
 
 func (p PostHandler) GetOne(ctx *fasthttp.RequestCtx) {
 	var id int64 = -1
-	id = ctx.UserValue("id").(int64)
+	id, _ = strconv.ParseInt(ctx.UserValue("id").(string), 10, 64)
 	if id == -1 {
 		ctx.SetStatusCode(400)
 		ctx.SetBody(models.BadRequestErrorBytes)

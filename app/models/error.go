@@ -43,7 +43,7 @@ func (e Error) MessageToBytes() []byte {
 }
 
 func (e Error) Log() {
-	log.Print("Error: ", e.StatusCode, e.Message)
+	log.Print("Error: ", e.StatusCode, " ", e.Message)
 }
 
 func (e Error) SetToContext(ctx *fasthttp.RequestCtx) {

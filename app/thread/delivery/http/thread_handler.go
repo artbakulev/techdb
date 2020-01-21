@@ -7,6 +7,7 @@ import (
 	"github.com/artbakulev/techdb/pkg/queryWorker"
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
+	"log"
 	"strconv"
 )
 
@@ -41,7 +42,7 @@ func (h ThreadHandler) CreateThread(ctx *fasthttp.RequestCtx) {
 	}
 
 	createdThread, e := h.usecase.CreateThread(slug, createdThread)
-	//createdThread.Slug = slug
+	log.Printf("%v", e)
 
 	if e != nil {
 		e.SetToContext(ctx)
@@ -62,12 +63,9 @@ func (h ThreadHandler) CreateThread(ctx *fasthttp.RequestCtx) {
 func (h ThreadHandler) GetThreads(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 	query := models.PostsRequestQuery{
-		ThreadID:   0,
-		ThreadSlug: "",
-		Limit:      queryWorker.GetIntParam(ctx, "limit"),
-		Since:      queryWorker.GetStringParam(ctx, "since"),
-		Sort:       "",
-		Desc:       queryWorker.GetBoolParam(ctx, "desc"),
+		Limit: queryWorker.GetIntParam(ctx, "limit"),
+		Since: queryWorker.GetStringParam(ctx, "since"),
+		Desc:  queryWorker.GetBoolParam(ctx, "desc"),
 	}
 
 	threads, err := h.usecase.GetThreads(slug, query)

@@ -42,6 +42,7 @@ func NewPostUsecase(userRepo user.Repository, postRepo post.Repository,
 func (p postUsecase) CreatePosts(slug string, id int64, posts models.Posts) (models.Posts, *models.Error) {
 	var foundThread models.Thread
 	var err *models.Error
+
 	if id == -1 {
 		foundThread, err = p.threadRepo.GetBySlug(slug)
 	} else {

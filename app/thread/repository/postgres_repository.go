@@ -31,7 +31,7 @@ func (p postgresThreadRepository) GetByID(id int64) (models.Thread, *models.Erro
 
 	if res.Next() {
 		nullString := pgtype.Text{}
-		err = res.Scan(&t.Author, &t.Created, &t.Forum, &t.ID, &t.Message, &nullString, &t.Title, &t.Votes)
+		err = res.Scan(&t.ID, &t.Slug, &t.Author, &t.Forum, &t.Title, &t.Message, &t.Created, &t.Votes)
 		if err != nil {
 			return models.Thread{}, models.NewError(500, models.InternalError)
 		}
@@ -75,6 +75,8 @@ func (p postgresThreadRepository) GetBySlug(slug string) (models.Thread, *models
 func (p postgresThreadRepository) Create(forum models.Forum, user models.User, thread models.Thread) (models.Thread, *models.Error) {
 	thread.Forum = forum.Slug
 	thread.Author = user.Nickname
+
+	log.Print("!!!!!!!!!!!!!!")
 
 	tx, _ := p.conn.Begin()
 	defer tx.Rollback()
