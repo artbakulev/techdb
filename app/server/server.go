@@ -16,7 +16,6 @@ import (
 	"github.com/artbakulev/techdb/app/user/delivery/http"
 	"github.com/artbakulev/techdb/app/user/repository"
 	"github.com/artbakulev/techdb/app/user/usecase"
-	http6 "github.com/artbakulev/techdb/app/vote/delivery/http"
 	repository6 "github.com/artbakulev/techdb/app/vote/repository"
 	usecase6 "github.com/artbakulev/techdb/app/vote/usecase"
 	"github.com/buaazp/fasthttprouter"
@@ -49,9 +48,8 @@ func NewServer(host string, connection *pgx.ConnPool) *server {
 	http.NewUserHandler(router, userUsecase)
 	http2.NewForumHandler(router, forumUsecase)
 	http3.NewServiceHandler(router, serviceUsecase)
-	http4.NewThreadHandler(router, threadUsecase, forumUsecase)
+	http4.NewThreadHandler(router, threadUsecase, forumUsecase, voteUsecase)
 	http5.NewPostHandler(router, postUsecase)
-	http6.NewVoteHandler(router, voteUsecase)
 
 	return &server{
 		Host:   host,

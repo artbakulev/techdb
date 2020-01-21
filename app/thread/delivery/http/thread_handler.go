@@ -4,28 +4,31 @@ import (
 	"github.com/artbakulev/techdb/app/forum"
 	"github.com/artbakulev/techdb/app/models"
 	"github.com/artbakulev/techdb/app/thread"
+	"github.com/artbakulev/techdb/app/vote"
 	"github.com/artbakulev/techdb/pkg/queryWorker"
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
-	"log"
 	"strconv"
 )
 
 type ThreadHandler struct {
 	usecase      thread.Usecase
-	extraUsecase forum.Usecase //	из-за проблемы в fasthttprouter
+	forumUsecase forum.Usecase
+	voteUsecase  vote.Usecase
 }
 
-func NewThreadHandler(router *fasthttprouter.Router, usecase thread.Usecase, extraUsecase forum.Usecase) {
+func NewThreadHandler(router *fasthttprouter.Router, usecase thread.Usecase,
+	forumUsecase forum.Usecase, voteUsecase vote.Usecase) {
 	handler := &ThreadHandler{
 		usecase:      usecase,
-		extraUsecase: extraUsecase,
+		forumUsecase: forumUsecase,
+		voteUsecase:  voteUsecase,
 	}
 
-	//router.POST("/api/forum/:slug/create", handler.GetHandler)
 	router.POST("/api/forum/:slug", handler.CreateForum)
 	router.POST("/api/forum/:slug/create", handler.CreateThread)
 	router.GET("/api/forum/:slug/threads", handler.GetThreads)
+	router.POST("/api/thread/:slug_or_id/vote", handler.CreateVote)
 	router.POST("/api/thread/:slug_or_id/details", handler.UpdateThread)
 	router.GET("/api/thread/:slug_or_id/details", handler.GetThread)
 }
@@ -42,11 +45,13 @@ func (h ThreadHandler) CreateThread(ctx *fasthttp.RequestCtx) {
 	}
 
 	createdThread, e := h.usecase.CreateThread(slug, createdThread)
-	log.Printf("%v", e)
-
-	if e != nil {
+	if e != nil && e.StatusCode == 409 {
+		ctx.SetStatusCode(409)
+	} else if e != nil {
 		e.SetToContext(ctx)
 		return
+	} else {
+		ctx.SetStatusCode(201)
 	}
 
 	jsonBlob, err := createdThread.MarshalJSON()
@@ -56,7 +61,6 @@ func (h ThreadHandler) CreateThread(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctx.SetStatusCode(201)
 	ctx.SetBody(jsonBlob)
 }
 
@@ -117,7 +121,6 @@ func (h ThreadHandler) UpdateThread(ctx *fasthttp.RequestCtx) {
 		ctx.SetBody(models.InternalErrorBytes)
 		return
 	}
-
 	ctx.SetBody(jsonBlob)
 }
 
@@ -155,9 +158,14 @@ func (f ThreadHandler) CreateForum(ctx *fasthttp.RequestCtx) {
 		ctx.SetBody(models.BadRequestErrorBytes)
 		return
 	}
-	createdForum, e := f.extraUsecase.CreateForum(buffer)
-	if e != nil {
-		createdForum, e = f.extraUsecase.GetForumBySlug(buffer.Slug)
+	createdForum, e := f.forumUsecase.CreateForum(buffer)
+	if e != nil && e.StatusCode == 404 {
+		e.SetToContext(ctx)
+		return
+	}
+
+	if e != nil && e.StatusCode == 409 {
+		createdForum, e = f.forumUsecase.GetForumBySlug(buffer.Slug)
 		if e != nil {
 			e.SetToContext(ctx)
 			return
@@ -173,5 +181,40 @@ func (f ThreadHandler) CreateForum(ctx *fasthttp.RequestCtx) {
 		ctx.SetBody(models.InternalErrorBytes)
 		return
 	}
+	ctx.SetBody(jsonBlob)
+}
+
+func (h ThreadHandler) CreateVote(ctx *fasthttp.RequestCtx) {
+	slugOrID := ctx.UserValue("slug_or_id").(string)
+	id, _ := strconv.ParseInt(slugOrID, 10, 64)
+	createdVote := models.Vote{}
+
+	if id == 0 {
+		createdVote.Thread = -1
+		createdVote.ThreadSlug = slugOrID
+	} else {
+		createdVote.Thread = id
+	}
+
+	err := createdVote.UnmarshalJSON(ctx.PostBody())
+	if err != nil {
+		ctx.SetStatusCode(400)
+		ctx.SetBody(models.BadRequestErrorBytes)
+		return
+	}
+
+	existingThread, e := h.voteUsecase.UpsertVote(createdVote)
+
+	if e != nil {
+		e.SetToContext(ctx)
+		return
+	}
+	jsonBlob, err := existingThread.MarshalJSON()
+	if err != nil {
+		ctx.SetStatusCode(500)
+		ctx.SetBody(models.InternalErrorBytes)
+		return
+	}
+
 	ctx.SetBody(jsonBlob)
 }

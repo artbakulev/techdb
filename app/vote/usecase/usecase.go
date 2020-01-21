@@ -19,8 +19,15 @@ func NewVoteUsecase(voteRepo vote.Repository, threadRepo thread.Repository) vote
 }
 
 func (v voteUsecase) UpsertVote(vote models.Vote) (models.Thread, *models.Error) {
+	if vote.Thread == -1 {
+		foundThread, err := v.threadRepo.GetBySlug(vote.ThreadSlug)
+		if err != nil {
+			return models.Thread{}, err
+		}
+		vote.Thread = foundThread.ID
+	}
 	err := v.voteRepo.Update(vote)
-	if err.StatusCode == 404 {
+	if err != nil && err.StatusCode == 404 {
 		err = v.voteRepo.Create(vote)
 	}
 	if err != nil {

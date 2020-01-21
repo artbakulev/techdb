@@ -4,8 +4,6 @@ import (
 	"github.com/artbakulev/techdb/app/models"
 	"github.com/artbakulev/techdb/app/thread"
 	"github.com/jackc/pgx"
-	"github.com/jackc/pgx/pgtype"
-	"log"
 )
 
 type postgresThreadRepository struct {
@@ -30,14 +28,10 @@ func (p postgresThreadRepository) GetByID(id int64) (models.Thread, *models.Erro
 	defer res.Close()
 
 	if res.Next() {
-		nullString := pgtype.Text{}
 		err = res.Scan(&t.ID, &t.Slug, &t.Author, &t.Forum, &t.Title, &t.Message, &t.Created, &t.Votes)
 		if err != nil {
 			return models.Thread{}, models.NewError(500, models.InternalError)
 		}
-
-		t.Slug = nullString.String
-
 		return t, nil
 	}
 
@@ -58,25 +52,20 @@ func (p postgresThreadRepository) GetBySlug(slug string) (models.Thread, *models
 	defer res.Close()
 
 	if res.Next() {
-		//nullString := pgtype.Text{}
 		err = res.Scan(&t.ID, &t.Slug, &t.Author, &t.Forum, &t.Title, &t.Message, &t.Created, &t.Votes)
 		if err != nil {
 			return models.Thread{}, models.NewError(500, models.DBParsingError, err.Error())
 		}
 
-		//t.Slug = nullString.String
-
 		return t, nil
 	}
 
-	return models.Thread{}, models.NewError(500, models.InternalError)
+	return models.Thread{}, models.NewError(404, models.InternalError)
 }
 
 func (p postgresThreadRepository) Create(forum models.Forum, user models.User, thread models.Thread) (models.Thread, *models.Error) {
 	thread.Forum = forum.Slug
 	thread.Author = user.Nickname
-
-	log.Print("!!!!!!!!!!!!!!")
 
 	tx, _ := p.conn.Begin()
 	defer tx.Rollback()
@@ -145,8 +134,6 @@ func (p postgresThreadRepository) Update(thread models.Thread, threadUpdate mode
 }
 
 func (p postgresThreadRepository) GetMany(forum models.Forum, query models.PostsRequestQuery) (models.Threads, *models.Error) {
-	log.Printf("%v", query)
-
 	baseSQL := "SELECT * FROM threads"
 
 	baseSQL += " WHERE forum = '" + forum.Slug + "'"

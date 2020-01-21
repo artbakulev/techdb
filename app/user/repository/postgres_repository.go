@@ -16,7 +16,6 @@ func NewPostgresUserRepository(db *pgx.ConnPool) user.Repository {
 
 func (p postgresUserRepository) GetByNickname(nickname string) (models.User, *models.Error) {
 	u := models.User{}
-
 	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM users WHERE nickname = $1`, nickname)
 	if err != nil {
 		return models.User{}, models.NewError(500, models.InternalError, err.Error())
@@ -109,7 +108,7 @@ func (p postgresUserRepository) Update(userUpdate models.User) (models.User, *mo
 }
 
 func (p postgresUserRepository) GetByForum(forum models.Forum, query models.PostsRequestQuery) (models.Users, *models.Error) {
-	baseSQL := `SELECT about, email, fullname, fu.nickname FROM users_forum JOIN users u ON u.nickname = users_forum.nickname`
+	baseSQL := `SELECT about, email, fullname, u.nickname FROM users_forum JOIN users u ON u.nickname = users_forum.nickname`
 
 	baseSQL += ` where slug = '` + forum.Slug + `'`
 	if query.Since != "" {

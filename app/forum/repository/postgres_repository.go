@@ -28,13 +28,10 @@ func (p postgresForumRepository) GetBySlug(slug string) (models.Forum, *models.E
 		if err != nil {
 			return models.Forum{}, models.NewError(500, models.DBParsingError, err.Error())
 		}
+		return f, nil
 	}
 
-	//if f.Slug == "" {
-	//	return models.Forum{}, models.NewError(404, models.NotFoundError)
-	//}
-
-	return f, nil
+	return models.Forum{}, models.NewError(404, models.NotFoundError)
 }
 
 func (p postgresForumRepository) Create(user models.User, forumNew models.Forum) (models.Forum, *models.Error) {

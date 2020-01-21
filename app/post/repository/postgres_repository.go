@@ -7,7 +7,6 @@ import (
 	"github.com/artbakulev/techdb/pkg/postsSQLGenerator"
 	"github.com/jackc/pgx"
 	"github.com/lib/pq"
-	"log"
 	"strings"
 )
 
@@ -42,6 +41,10 @@ func (p postgresPostRepository) GetByID(id int64) (models.Post, *models.Error) {
 }
 
 func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thread) (models.Posts, *models.Error) {
+	if len(posts) == 0 {
+		return models.Posts{}, nil
+	}
+
 	tx, _ := p.conn.Begin()
 	defer tx.Rollback()
 
@@ -51,11 +54,12 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 		if _, ok := mapParents[item.Parent]; !ok && item.Parent != 0 {
 			parentPostQuery, err := p.GetByID(item.Parent)
 			if err != nil {
+				err.StatusCode = 409
 				return models.Posts{}, err
 			}
 
 			if parentPostQuery.Thread != thread.ID {
-				return models.Posts{}, models.NewError(400, models.BadRequestError)
+				return models.Posts{}, models.NewError(409, models.BadRequestError)
 			}
 
 			mapParents[item.Parent] = parentPostQuery
@@ -87,8 +91,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 		Scan(&posts[0].Created)
 
 	if err != nil {
-		log.Print(2)
-		return models.Posts{}, models.NewError(500, models.CreateError, err.Error())
+		return models.Posts{}, models.NewError(404, models.CreateError)
 	}
 
 	now := posts[0].Created
@@ -152,6 +155,7 @@ func (p postgresPostRepository) Update(post models.Post, postUpdate models.PostU
 	}
 
 	post.Message = postUpdate.Message
+	post.IsEdited = true
 
 	return post, nil
 }

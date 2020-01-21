@@ -34,31 +34,40 @@ func (t threadUsecase) GetThreadBySlugOrID(data string, isSlug bool) (models.Thr
 }
 
 func (t threadUsecase) CreateThread(slug string, thread models.Thread) (models.Thread, *models.Error) {
-
-	foundForum, err := t.forumRepo.GetBySlug(thread.Forum)
+	foundForum, err := t.forumRepo.GetBySlug(slug)
 	if err != nil {
 		return models.Thread{}, err
 	}
 	foundUser, err := t.userRepo.GetByNickname(thread.Author)
 	if err != nil {
-
 		return models.Thread{}, err
 	}
 
+	thread.Forum = foundForum.Slug
 	createdThread, err := t.threadRepo.Create(foundForum, foundUser, thread)
 
 	if err != nil && err.StatusCode == 409 {
-		return t.threadRepo.GetBySlug(slug)
+		thread, _ = t.threadRepo.GetBySlug(thread.Slug)
+		return thread, models.NewError(409, models.ConflictError)
 	}
 
 	return createdThread, err
 }
 
 func (t threadUsecase) UpdateThread(threadUpdate models.ThreadUpdate) (models.Thread, *models.Error) {
-	foundThread, err := t.threadRepo.GetBySlug(threadUpdate.Slug)
+	var foundThread models.Thread
+	var err *models.Error
+	if threadUpdate.Slug != "" {
+		foundThread, err = t.threadRepo.GetBySlug(threadUpdate.Slug)
+
+	} else {
+		foundThread, err = t.threadRepo.GetByID(threadUpdate.ID)
+	}
+
 	if err != nil {
 		return models.Thread{}, err
 	}
+
 	return t.threadRepo.Update(foundThread, threadUpdate)
 }
 

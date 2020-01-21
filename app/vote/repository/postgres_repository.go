@@ -19,7 +19,7 @@ func (p postgresVoteRepository) Create(vote models.Vote) *models.Error {
 		vote.Nickname, vote.Voice, vote.Thread)
 
 	if err != nil {
-		return models.NewError(500, models.InternalError)
+		return models.NewError(404, models.InternalError)
 	}
 
 	if resInsert.RowsAffected() == 0 {
@@ -33,7 +33,7 @@ func (p postgresVoteRepository) Update(vote models.Vote) *models.Error {
 	res, err := p.conn.Exec(`UPDATE votes SET voice = $1 WHERE nickname = $2 AND thread = $3`,
 		vote.Voice, vote.Nickname, vote.Thread)
 	if err != nil {
-		return models.NewError(500, models.UpdateError)
+		return models.NewError(500, models.UpdateError, err.Error())
 	}
 	if res.RowsAffected() == 0 {
 		return models.NewError(404, models.NotFoundError)

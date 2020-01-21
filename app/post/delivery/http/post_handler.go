@@ -74,20 +74,14 @@ func (p PostHandler) CreatePosts(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if len(posts) == 0 {
-		ctx.SetStatusCode(201)
-		ctx.SetBody([]byte{'[', ']'})
-		return
-	}
-
-	createdPosts, e := p.usecase.CreatePosts(slugOrId, id, posts)
+	posts, e := p.usecase.CreatePosts(slugOrId, id, posts)
 
 	if e != nil {
 		e.SetToContext(ctx)
 		return
 	}
 
-	jsonBlob, err := createdPosts.MarshalJSON()
+	jsonBlob, err := posts.MarshalJSON()
 	if err != nil {
 		ctx.SetStatusCode(500)
 		ctx.SetBody(models.InternalErrorBytes)

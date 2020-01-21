@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+var I = 0
+
 const (
 	CreateError     = "ошибка создания объекта"
 	UpdateError     = "ошибка обновления объекта"
@@ -49,5 +51,5 @@ func (e Error) Log() {
 func (e Error) SetToContext(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(e.StatusCode)
 	ctx.SetBody(e.MessageToBytes())
-	e.Log() //	TODO: убрать на проде
+	//e.Log()
 }

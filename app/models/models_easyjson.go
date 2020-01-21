@@ -1278,7 +1278,7 @@ func easyjsonD2b7633eEncodeGithubComArtbakulevTechdbAppModels13(out *jwriter.Wri
 		out.RawString(prefix)
 		out.String(string(in.Forum))
 	}
-	if in.IsEdited {
+	{
 		const prefix string = ",\"isEdited\":"
 		out.RawString(prefix)
 		out.Bool(bool(in.IsEdited))
@@ -1367,23 +1367,17 @@ func easyjsonD2b7633eEncodeGithubComArtbakulevTechdbAppModels14(out *jwriter.Wri
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Posts != 0 {
+	{
 		const prefix string = ",\"posts\":"
-		first = false
 		out.RawString(prefix[1:])
 		out.Int64(int64(in.Posts))
 	}
 	{
 		const prefix string = ",\"slug\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		out.String(string(in.Slug))
 	}
-	if in.Threads != 0 {
+	{
 		const prefix string = ",\"threads\":"
 		out.RawString(prefix)
 		out.Int32(int32(in.Threads))

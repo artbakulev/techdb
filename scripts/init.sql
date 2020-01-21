@@ -11,7 +11,6 @@ DROP INDEX IF EXISTS idx_users_nickname;
 DROP INDEX IF EXISTS idx_users_email;
 
 DROP INDEX IF EXISTS idx_forum_slug;
-DROP INDEX IF EXIST idx_forum_
 
 DROP INDEX IF EXISTS idx_users_forum_nickname;
 DROP INDEX IF EXISTS idx_users_forum_user;
@@ -103,6 +102,23 @@ CREATE TRIGGER new_thread_trigger
 EXECUTE PROCEDURE new_thread();
 
 
+CREATE OR REPLACE FUNCTION new_post() RETURNS TRIGGER AS
+$body$
+BEGIN
+    UPDATE forums
+    SET posts = posts + 1
+    WHERE slug = NEW.forum;
+    RETURN NEW;
+END;
+$body$ LANGUAGE plpgsql;
+
+CREATE TRIGGER new_posts_trigger
+    AFTER INSERT
+    ON posts
+    FOR EACH ROW
+EXECUTE PROCEDURE new_post();
+
+
 CREATE OR REPLACE FUNCTION new_path() RETURNS TRIGGER AS
 $body$
 BEGIN
@@ -131,6 +147,13 @@ $body$ LANGUAGE plpgsql;
 CREATE TRIGGER insert_forum_user_trigger
     AFTER INSERT
     ON threads
+    FOR EACH ROW
+EXECUTE PROCEDURE insert_users_forum();
+
+
+CREATE TRIGGER insert_forum_user_trigger
+    AFTER INSERT
+    ON posts
     FOR EACH ROW
 EXECUTE PROCEDURE insert_users_forum();
 
