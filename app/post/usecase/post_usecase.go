@@ -8,20 +8,6 @@ import (
 	"github.com/artbakulev/techdb/app/user"
 )
 
-//mapUsers := make(map[string]string) - slice
-
-//if _, ok := mapUsers[item.Author]; !ok {
-//mapUsers[item.Author] = item.Author
-//}
-
-//go func() {
-//	for _, val := range mapUsers {
-//		AddUser(val, thread.Forum)
-//	}
-//}()
-
-// TODO: вот тут забыл
-
 type postUsecase struct {
 	userRepo   user.Repository
 	postRepo   post.Repository

@@ -17,7 +17,7 @@ func NewPostgresServiceRepository(conn *pgx.ConnPool) service.Repository {
 func (p postgresServiceRepository) Clear() *models.Error {
 	res, err := p.conn.Query("TRUNCATE TABLE users, forums, threads, posts, votes, users_forum CASCADE")
 	if err != nil {
-		return models.NewError(500, models.InternalError, err.Error())
+		return models.NewError(500, models.InternalError)
 	}
 	defer res.Close()
 	return nil
@@ -30,7 +30,7 @@ func (p postgresServiceRepository) GetStatus() (models.Status, *models.Error) {
 		" CROSS JOIN (SELECT count(nickname) FROM users) as u")
 
 	if err != nil {
-		return models.Status{}, models.NewError(500, models.InternalError, err.Error())
+		return models.Status{}, models.NewError(500, models.InternalError)
 	}
 
 	defer res.Close()
@@ -40,7 +40,7 @@ func (p postgresServiceRepository) GetStatus() (models.Status, *models.Error) {
 		err = res.Scan(&s.Forum, &s.Post, &s.Thread, &s.User)
 
 		if err != nil {
-			return models.Status{}, models.NewError(500, models.InternalError, err.Error())
+			return models.Status{}, models.NewError(500, models.InternalError)
 		}
 
 		return s, nil

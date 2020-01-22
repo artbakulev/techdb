@@ -10,11 +10,6 @@ func GetIntParam(ctx *fasthttp.RequestCtx, key string) int {
 	return param
 }
 
-func GetInt64Param(ctx *fasthttp.RequestCtx, key string) int64 {
-	param, _ := strconv.ParseInt(string(ctx.URI().QueryArgs().Peek(key)), 10, 64)
-	return param
-}
-
 func GetStringParam(ctx *fasthttp.RequestCtx, key string) string {
 	return string(ctx.URI().QueryArgs().Peek(key))
 }

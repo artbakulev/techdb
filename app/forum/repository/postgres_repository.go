@@ -17,7 +17,7 @@ func NewPostgresForumRepository(db *pgx.ConnPool) forum.Repository {
 func (p postgresForumRepository) GetBySlug(slug string) (models.Forum, *models.Error) {
 	res, err := p.conn.Query(`SELECT * FROM forums WHERE slug = $1`, slug)
 	if err != nil {
-		return models.Forum{}, models.NewError(500, models.InternalError, err.Error())
+		return models.Forum{}, models.NewError(500, models.InternalError)
 	}
 	defer res.Close()
 
@@ -26,7 +26,7 @@ func (p postgresForumRepository) GetBySlug(slug string) (models.Forum, *models.E
 	if res.Next() {
 		err := res.Scan(&f.Slug, &f.Title, &f.User, &f.Threads, &f.Posts)
 		if err != nil {
-			return models.Forum{}, models.NewError(500, models.DBParsingError, err.Error())
+			return models.Forum{}, models.NewError(500, models.DBParsingError)
 		}
 		return f, nil
 	}

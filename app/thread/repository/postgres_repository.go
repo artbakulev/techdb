@@ -32,7 +32,7 @@ func (p postgresThreadRepository) GetByID(id int64) (models.Thread, *models.Erro
 	if res.Next() {
 		err = res.Scan(&t.ID, nullSlug, &t.Author, &t.Forum, &t.Title, &t.Message, &t.Created, &t.Votes)
 		if err != nil {
-			return models.Thread{}, models.NewError(500, models.InternalError, err.Error())
+			return models.Thread{}, models.NewError(500, models.InternalError)
 		}
 
 		t.Slug = nullSlug.String
@@ -58,7 +58,7 @@ func (p postgresThreadRepository) GetBySlug(slug string) (models.Thread, *models
 	if res.Next() {
 		err = res.Scan(&t.ID, &t.Slug, &t.Author, &t.Forum, &t.Title, &t.Message, &t.Created, &t.Votes)
 		if err != nil {
-			return models.Thread{}, models.NewError(500, models.DBParsingError, err.Error())
+			return models.Thread{}, models.NewError(500, models.DBParsingError)
 		}
 
 		return t, nil
@@ -97,7 +97,7 @@ func (p postgresThreadRepository) Create(forum models.Forum, user models.User, t
 
 	err := tx.Commit()
 	if err != nil {
-		return models.Thread{}, models.NewError(500, models.InternalError, err.Error())
+		return models.Thread{}, models.NewError(500, models.InternalError)
 	}
 
 	return thread, nil
@@ -162,7 +162,7 @@ func (p postgresThreadRepository) GetMany(forum models.Forum, query models.Posts
 
 	res, err := p.conn.Query(baseSQL)
 	if err != nil {
-		return models.Threads{}, models.NewError(500, models.DBParsingError, err.Error())
+		return models.Threads{}, models.NewError(500, models.DBParsingError)
 	}
 
 	buffer := models.Thread{}
@@ -175,7 +175,7 @@ func (p postgresThreadRepository) GetMany(forum models.Forum, query models.Posts
 			&buffer.Title, &buffer.Message, &buffer.Created, &buffer.Votes)
 
 		if err != nil {
-			return models.Threads{}, models.NewError(500, models.InternalError, err.Error())
+			return models.Threads{}, models.NewError(500, models.InternalError)
 		}
 		buffer.Slug = nullSlug.String
 		existingThreads = append(existingThreads, buffer)

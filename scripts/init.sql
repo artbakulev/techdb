@@ -7,15 +7,7 @@ DROP TABLE IF EXISTS posts CASCADE;
 DROP TABLE IF EXISTS votes CASCADE;
 DROP TABLE IF EXISTS users_forum CASCADE;
 
-DROP INDEX IF EXISTS idx_users_nickname;
-DROP INDEX IF EXISTS idx_users_email;
-
-DROP INDEX IF EXISTS idx_forum_slug;
-
-DROP INDEX IF EXISTS idx_users_forum_nickname;
-DROP INDEX IF EXISTS idx_users_forum_user;
-
-CREATE TABLE users
+CREATE UNLOGGED TABLE users
 (
     nickname CITEXT NOT NULL UNIQUE PRIMARY KEY,
     fullname TEXT,
@@ -24,11 +16,11 @@ CREATE TABLE users
 );
 
 
-CREATE INDEX idx_users_nickname ON users (nickname);
-CREATE INDEX idx_users_email ON users (email);
+CREATE INDEX IF NOT EXISTS idx_users_nickname ON users (nickname);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
 
 
-CREATE TABLE forums
+CREATE UNLOGGED TABLE forums
 (
     slug    CITEXT  NOT NULL UNIQUE PRIMARY KEY ,
     title   TEXT    NOT NULL,
@@ -37,10 +29,10 @@ CREATE TABLE forums
     posts   INTEGER DEFAULT 0
 );
 
-CREATE INDEX idx_forum_user ON forums ("user");
+CREATE INDEX IF NOT EXISTS idx_forum_user ON forums ("user");
 
 
-CREATE TABLE threads
+CREATE UNLOGGED TABLE threads
 (
     id      SERIAL PRIMARY KEY,
     slug    CITEXT DEFAULT NULL UNIQUE,
@@ -52,7 +44,13 @@ CREATE TABLE threads
     votes   INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE posts
+CREATE INDEX IF NOT EXISTS idx_threads_slug ON threads (slug);
+CREATE INDEX IF NOT EXISTS idx_threads_forum_created ON threads (forum, created);
+CREATE INDEX IF NOT EXISTS idx_threads_author_forum ON threads (author, forum);
+
+
+
+CREATE UNLOGGED TABLE posts
 (
     id       SERIAL PRIMARY KEY,
     forum    CITEXT REFERENCES forums (slug),
@@ -65,8 +63,17 @@ CREATE TABLE posts
     path     INTEGER[]   DEFAULT array []::INT[]
 );
 
+CREATE INDEX IF NOT EXISTS idx_posts_path_id ON posts (id, (path [1]));
+CREATE INDEX IF NOT EXISTS idx_posts_path ON posts (path);
+CREATE INDEX IF NOT EXISTS idx_posts_path_1 ON posts ((path [1]));
+CREATE INDEX IF NOT EXISTS idx_posts_thread_id ON posts (thread, id);
+CREATE INDEX IF NOT EXISTS idx_posts_thread ON posts (thread);
+CREATE INDEX IF NOT EXISTS idx_posts_thread_path_id ON posts (thread, path, id);
+CREATE INDEX IF NOT EXISTS idx_posts_thread_id_path_parent ON posts (thread, id, (path[1]), parent);
+CREATE INDEX IF NOT EXISTS idx_posts_author_forum ON posts (author, forum);
 
-CREATE TABLE votes
+
+CREATE UNLOGGED TABLE votes
 (
     nickname CITEXT REFERENCES  users (nickname) NOT NULL,
     voice    SMALLINT CHECK ( voice IN (-1, 1) ),
@@ -74,16 +81,16 @@ CREATE TABLE votes
     UNIQUE (nickname, thread)
 );
 
+CREATE INDEX IF NOT EXISTS idx_votes_nickname_thread ON votes (nickname, thread);
 
-CREATE TABLE users_forum
+CREATE UNLOGGED TABLE users_forum
 (
     nickname CITEXT REFERENCES users (nickname) NOT NULL,
     slug     CITEXT REFERENCES forums (slug) NOT NULL,
     UNIQUE (nickname, slug)
 );
 
-CREATE INDEX idx_users_forum_nickname ON users_forum (nickname);
-CREATE INDEX idx_users_forum_slug ON users_forum (slug);
+CREATE INDEX IF NOT EXISTS idx_users_forum_nickname_slug ON users_forum (nickname, slug);
 
 CREATE OR REPLACE FUNCTION new_thread() RETURNS TRIGGER AS
 $body$
@@ -100,23 +107,6 @@ CREATE TRIGGER new_thread_trigger
     ON threads
     FOR EACH ROW
 EXECUTE PROCEDURE new_thread();
-
-
-/*CREATE OR REPLACE FUNCTION new_post() RETURNS TRIGGER AS
-$body$
-BEGIN
-    UPDATE forums
-    SET posts = posts + 1
-    WHERE slug = NEW.forum;
-    RETURN NEW;
-END;
-$body$ LANGUAGE plpgsql;
-
-CREATE TRIGGER new_posts_trigger
-    AFTER INSERT
-    ON posts
-    FOR EACH ROW
-EXECUTE PROCEDURE new_post();*/
 
 
 CREATE OR REPLACE FUNCTION new_path() RETURNS TRIGGER AS
@@ -149,14 +139,6 @@ CREATE TRIGGER insert_forum_user_trigger
     ON threads
     FOR EACH ROW
 EXECUTE PROCEDURE insert_users_forum();
-
-
--- CREATE TRIGGER insert_forum_user_trigger
---     AFTER INSERT
---     ON posts
---     FOR EACH ROW
--- EXECUTE PROCEDURE insert_users_forum();
-
 
 CREATE OR REPLACE FUNCTION update_votes() RETURNS TRIGGER AS
 $body$

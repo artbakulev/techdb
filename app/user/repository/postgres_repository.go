@@ -18,14 +18,14 @@ func (p postgresUserRepository) GetByNickname(nickname string) (models.User, *mo
 	u := models.User{}
 	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM users WHERE nickname = $1`, nickname)
 	if err != nil {
-		return models.User{}, models.NewError(500, models.InternalError, err.Error())
+		return models.User{}, models.NewError(500, models.InternalError)
 	}
 	defer res.Close()
 
 	if res.Next() {
 		err = res.Scan(&u.About, &u.Email, &u.Fullname, &u.Nickname)
 		if err != nil {
-			return models.User{}, models.NewError(404, models.DBParsingError, err.Error())
+			return models.User{}, models.NewError(404, models.DBParsingError)
 		}
 		return u, nil
 	}
@@ -36,14 +36,14 @@ func (p postgresUserRepository) GetByEmail(email string) (models.User, *models.E
 	u := models.User{}
 	res, err := p.conn.Query(`SELECT about, email, fullname, nickname FROM users WHERE email = $1`, email)
 	if err != nil {
-		return models.User{}, models.NewError(500, models.NotFoundError, err.Error())
+		return models.User{}, models.NewError(500, models.NotFoundError)
 	}
 	defer res.Close()
 
 	if res.Next() {
 		err := res.Scan(&u.About, &u.Email, &u.Fullname, &u.Nickname)
 		if err != nil {
-			return models.User{}, models.NewError(500, models.DBParsingError, err.Error())
+			return models.User{}, models.NewError(500, models.DBParsingError)
 		}
 		return u, nil
 	}
@@ -55,7 +55,7 @@ func (p postgresUserRepository) Create(userNew models.User) (models.User, *model
 	res, err := p.conn.Exec(`INSERT INTO users (nickname, fullname, email, about) VALUES ($1, $2, $3, $4)`,
 		userNew.Nickname, userNew.Fullname, userNew.Email, userNew.About)
 	if err != nil {
-		return models.User{}, models.NewError(409, models.CreateError, err.Error())
+		return models.User{}, models.NewError(409, models.CreateError)
 	}
 
 	if res.RowsAffected() == 0 {
@@ -131,7 +131,7 @@ func (p postgresUserRepository) GetByForum(forum models.Forum, query models.Post
 
 	res, err := p.conn.Query(baseSQL)
 	if err != nil {
-		return models.Users{}, models.NewError(500, models.DBParsingError, err.Error())
+		return models.Users{}, models.NewError(500, models.DBParsingError)
 	}
 	defer res.Close()
 
@@ -142,7 +142,7 @@ func (p postgresUserRepository) GetByForum(forum models.Forum, query models.Post
 		err = res.Scan(&buffer.About, &buffer.Email, &buffer.Fullname, &buffer.Nickname)
 
 		if err != nil {
-			return models.Users{}, models.NewError(500, models.DBParsingError, err.Error())
+			return models.Users{}, models.NewError(500, models.DBParsingError)
 		}
 		foundUsers = append(foundUsers, buffer)
 	}

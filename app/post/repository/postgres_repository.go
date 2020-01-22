@@ -18,7 +18,7 @@ func (p postgresPostRepository) GetByID(id int64) (models.Post, *models.Error) {
 
 	res, err := p.conn.Query("SELECT author, created, forum, id, isedited, message, parent, thread, path FROM posts WHERE id = $1", id)
 	if err != nil {
-		return models.Post{}, models.NewError(404, models.NotFoundError, err.Error())
+		return models.Post{}, models.NewError(404, models.NotFoundError)
 	}
 	defer res.Close()
 
@@ -31,7 +31,7 @@ func (p postgresPostRepository) GetByID(id int64) (models.Post, *models.Error) {
 			&foundPost.Parent, &foundPost.Thread, pq.Array(&foundPost.Path))
 
 		if err != nil {
-			return models.Post{}, models.NewError(500, models.DBParsingError, err.Error())
+			return models.Post{}, models.NewError(500, models.DBParsingError)
 		}
 
 		return foundPost, nil
@@ -68,7 +68,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 
 	postIdsRows, err := tx.Query(fmt.Sprintf(`SELECT nextval(pg_get_serial_sequence('posts', 'id')) FROM generate_series(1, %d);`, len(posts)))
 	if err != nil {
-		return models.Posts{}, models.NewError(404, models.NotFoundError, err.Error())
+		return models.Posts{}, models.NewError(404, models.NotFoundError)
 	}
 	var postIds []int64
 	for postIdsRows.Next() {
@@ -91,7 +91,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 		Scan(&posts[0].Created)
 
 	if err != nil {
-		return models.Posts{}, models.NewError(404, models.CreateError, err.Error())
+		return models.Posts{}, models.NewError(404, models.CreateError)
 	}
 
 	now := posts[0].Created
@@ -112,7 +112,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 			"{"+strings.Trim(strings.Replace(fmt.Sprint(item.Path), " ", ",", -1), "[]")+"}")
 
 		if err != nil {
-			return models.Posts{}, models.NewError(500, models.CreateError, err.Error())
+			return models.Posts{}, models.NewError(500, models.CreateError)
 		}
 
 		if resInsert.RowsAffected() == 0 {
@@ -127,13 +127,13 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 
 	_, err = tx.Exec(`UPDATE forums SET posts = posts + $1 WHERE slug = $2`, len(posts), thread.Forum)
 	if err != nil {
-		return models.Posts{}, models.NewError(500, models.InternalError, err.Error())
+		return models.Posts{}, models.NewError(500, models.InternalError)
 	}
 
 	err = tx.Commit()
 
 	if err != nil {
-		return models.Posts{}, models.NewError(500, models.DBError, err.Error())
+		return models.Posts{}, models.NewError(500, models.DBError)
 	}
 
 	return posts, nil
@@ -151,7 +151,7 @@ func (p postgresPostRepository) Update(post models.Post, postUpdate models.PostU
 
 	res, err := p.conn.Exec("UPDATE posts SET message = $1, isedited = true WHERE id = $2", postUpdate.Message, post.ID)
 	if err != nil {
-		return models.Post{}, models.NewError(409, models.UpdateError, err.Error())
+		return models.Post{}, models.NewError(409, models.UpdateError)
 	}
 
 	if res.RowsAffected() == 0 {
@@ -188,7 +188,7 @@ func (p postgresPostRepository) GetMany(thread models.Thread, query models.Posts
 
 	res, err := p.conn.Query(baseSQL)
 	if err != nil {
-		return models.Posts{}, models.NewError(500, models.InternalError, err.Error())
+		return models.Posts{}, models.NewError(500, models.InternalError)
 	}
 	defer res.Close()
 
@@ -199,7 +199,7 @@ func (p postgresPostRepository) GetMany(thread models.Thread, query models.Posts
 			&bufferPost.IsEdited, &bufferPost.Message, &bufferPost.Parent, &bufferPost.Thread)
 
 		if err != nil {
-			return models.Posts{}, models.NewError(500, models.DBParsingError, err.Error())
+			return models.Posts{}, models.NewError(500, models.DBParsingError)
 		}
 		sortedPosts = append(sortedPosts, bufferPost)
 	}
