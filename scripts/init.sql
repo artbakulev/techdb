@@ -102,7 +102,7 @@ CREATE TRIGGER new_thread_trigger
 EXECUTE PROCEDURE new_thread();
 
 
-CREATE OR REPLACE FUNCTION new_post() RETURNS TRIGGER AS
+/*CREATE OR REPLACE FUNCTION new_post() RETURNS TRIGGER AS
 $body$
 BEGIN
     UPDATE forums
@@ -116,7 +116,7 @@ CREATE TRIGGER new_posts_trigger
     AFTER INSERT
     ON posts
     FOR EACH ROW
-EXECUTE PROCEDURE new_post();
+EXECUTE PROCEDURE new_post();*/
 
 
 CREATE OR REPLACE FUNCTION new_path() RETURNS TRIGGER AS
@@ -151,11 +151,11 @@ CREATE TRIGGER insert_forum_user_trigger
 EXECUTE PROCEDURE insert_users_forum();
 
 
-CREATE TRIGGER insert_forum_user_trigger
-    AFTER INSERT
-    ON posts
-    FOR EACH ROW
-EXECUTE PROCEDURE insert_users_forum();
+-- CREATE TRIGGER insert_forum_user_trigger
+--     AFTER INSERT
+--     ON posts
+--     FOR EACH ROW
+-- EXECUTE PROCEDURE insert_users_forum();
 
 
 CREATE OR REPLACE FUNCTION update_votes() RETURNS TRIGGER AS

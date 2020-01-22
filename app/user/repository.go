@@ -8,4 +8,5 @@ type Repository interface {
 	Create(userNew models.User) (models.User, *models.Error)
 	Update(userUpdate models.User) (models.User, *models.Error)
 	GetByForum(forum models.Forum, query models.PostsRequestQuery) (models.Users, *models.Error)
+	AddUserToForum(nickname string, forum string)
 }

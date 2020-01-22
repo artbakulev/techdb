@@ -51,7 +51,16 @@ func (p postUsecase) CreatePosts(slug string, id int64, posts models.Posts) (mod
 	if err != nil {
 		return models.Posts{}, err
 	}
-	return p.postRepo.CreateMany(posts, foundThread)
+	posts, err = p.postRepo.CreateMany(posts, foundThread)
+	if err != nil {
+		return models.Posts{}, err
+	}
+
+	for _, item := range posts {
+		p.userRepo.AddUserToForum(item.Author, foundThread.Forum)
+	}
+
+	return posts, nil
 }
 
 func (p postUsecase) UpdatePost(id int64, newPost models.PostUpdate) (models.Post, *models.Error) {

@@ -4,6 +4,7 @@ import (
 	"github.com/artbakulev/techdb/app/models"
 	"github.com/artbakulev/techdb/app/thread"
 	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 )
 
 type postgresThreadRepository struct {
@@ -27,11 +28,14 @@ func (p postgresThreadRepository) GetByID(id int64) (models.Thread, *models.Erro
 	}
 	defer res.Close()
 
+	nullSlug := &pgtype.Varchar{}
 	if res.Next() {
-		err = res.Scan(&t.ID, &t.Slug, &t.Author, &t.Forum, &t.Title, &t.Message, &t.Created, &t.Votes)
+		err = res.Scan(&t.ID, nullSlug, &t.Author, &t.Forum, &t.Title, &t.Message, &t.Created, &t.Votes)
 		if err != nil {
-			return models.Thread{}, models.NewError(500, models.InternalError)
+			return models.Thread{}, models.NewError(500, models.InternalError, err.Error())
 		}
+
+		t.Slug = nullSlug.String
 		return t, nil
 	}
 
@@ -163,16 +167,17 @@ func (p postgresThreadRepository) GetMany(forum models.Forum, query models.Posts
 
 	buffer := models.Thread{}
 	existingThreads := models.Threads{}
-	//nullSlug := &pgtype.Varchar{}
 
 	for res.Next() {
-		err = res.Scan(&buffer.ID, &buffer.Slug, &buffer.Author, &buffer.Forum,
+		nullSlug := pgtype.Varchar{}
+
+		err = res.Scan(&buffer.ID, &nullSlug, &buffer.Author, &buffer.Forum,
 			&buffer.Title, &buffer.Message, &buffer.Created, &buffer.Votes)
 
 		if err != nil {
 			return models.Threads{}, models.NewError(500, models.InternalError, err.Error())
 		}
-		//buffer.Slug = nullSlug.String
+		buffer.Slug = nullSlug.String
 		existingThreads = append(existingThreads, buffer)
 	}
 

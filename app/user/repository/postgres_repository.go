@@ -149,3 +149,9 @@ func (p postgresUserRepository) GetByForum(forum models.Forum, query models.Post
 
 	return foundUsers, nil
 }
+
+func (p postgresUserRepository) AddUserToForum(nickname string, forum string) {
+	_, _ = p.conn.Exec(`INSERT INTO users_forum (nickname, slug) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		nickname, forum)
+	return
+}

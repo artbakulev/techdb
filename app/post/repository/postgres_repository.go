@@ -91,7 +91,7 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 		Scan(&posts[0].Created)
 
 	if err != nil {
-		return models.Posts{}, models.NewError(404, models.CreateError)
+		return models.Posts{}, models.NewError(404, models.CreateError, err.Error())
 	}
 
 	now := posts[0].Created
@@ -107,7 +107,6 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 		}
 
 		item.Path = append(mapParents[item.Parent].Path, postIds[i])
-
 		resInsert, err := tx.Exec(`INSERT INTO posts (id, author, created, forum, message, parent, thread, path) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			postIds[i], item.Author, now, thread.Forum, item.Message, item.Parent, thread.ID,
 			"{"+strings.Trim(strings.Replace(fmt.Sprint(item.Path), " ", ",", -1), "[]")+"}")
@@ -124,6 +123,11 @@ func (p postgresPostRepository) CreateMany(posts models.Posts, thread models.Thr
 		posts[i].Thread = thread.ID
 		posts[i].Created = now
 		posts[i].ID = postIds[i]
+	}
+
+	_, err = tx.Exec(`UPDATE forums SET posts = posts + $1 WHERE slug = $2`, len(posts), thread.Forum)
+	if err != nil {
+		return models.Posts{}, models.NewError(500, models.InternalError, err.Error())
 	}
 
 	err = tx.Commit()
